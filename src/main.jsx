@@ -1,39 +1,55 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import {
-  Bot,
+  ArrowRight,
+  Brain,
   Check,
   CircleAlert,
   Eraser,
-  LockKeyhole,
   Loader2,
+  LockKeyhole,
   LogOut,
-  MessageSquareText,
-  PanelRightOpen,
+  Mic,
   Send,
   Sparkles,
   UserRound,
 } from "lucide-react";
 import "./styles.css";
 
+const heroArtworkUrl = new URL(
+  "../ChatGPT Image May 3, 2026, 02_52_01 PM.png",
+  import.meta.url,
+).href;
+const logoUrl = new URL("./assets/logo.jpg", import.meta.url).href;
+
 const AGENTS = {
-  brandy: {
-    id: "brandy",
-    name: "Brandy",
-    role: "Brand agent",
-    endpoint:
-      "https://primary-production-b3410.up.railway.app/webhook/c65bf43d-45d3-42b5-9333-65e02bcd8835/chat",
-    accent: "#0e7c66",
-    prompt: "Ask Brandy about brand voice, client context, or campaign messaging.",
-  },
   molly: {
     id: "molly",
-    name: "Molly",
-    role: "Operations agent",
+    name: "Molly™",
+    role: "Audience Intelligence",
     endpoint:
       "https://primary-production-b3410.up.railway.app/webhook/08d8a0f2-afb8-4e80-91d6-0efa25d5f85e/chat",
-    accent: "#b65f00",
-    prompt: "Ask Molly about workflows, tasks, follow-ups, or process details.",
+    accent: "#b45cff",
+    accentSoft: "#6d28d9",
+    mode: "Audience Intelligence",
+    specialty: "Research, segmentation, audience insight",
+    prompt: "Ask Molly about audience research, customer psychology, or market insight.",
+    welcome:
+      "Molly™ is online. Send audience context, customer notes, or market details and I will map the intelligence.",
+  },
+  brandy: {
+    id: "brandy",
+    name: "Brandy™",
+    role: "Brand Voice",
+    endpoint:
+      "https://primary-production-b3410.up.railway.app/webhook/c65bf43d-45d3-42b5-9333-65e02bcd8835/chat",
+    accent: "#8f3cff",
+    accentSoft: "#4c1d95",
+    mode: "Brand Voice",
+    specialty: "Messaging, positioning, creative direction",
+    prompt: "Ask Brandy about brand voice, client context, or campaign messaging.",
+    welcome:
+      "Brandy™ is online. Send the offer, audience, or campaign context and I will shape the brand direction.",
   },
 };
 
@@ -52,20 +68,17 @@ function createSessionId(agentId) {
 
 function createInitialState() {
   return {
-    activeAgentId: "brandy",
+    activeAgentId: "molly",
     conversations: Object.fromEntries(
-      Object.keys(AGENTS).map((agentId) => [
-        agentId,
+      Object.values(AGENTS).map((agent) => [
+        agent.id,
         {
-          sessionId: createSessionId(agentId),
+          sessionId: createSessionId(agent.id),
           messages: [
             {
-              id: `${agentId}-welcome`,
+              id: `${agent.id}-welcome`,
               role: "assistant",
-              content:
-                agentId === "brandy"
-                  ? "Hi, I am Brandy. Send me the customer, offer, or campaign context and I will help shape it."
-                  : "Hi, I am Molly. Give me the workflow or task details and I will help turn them into action.",
+              content: agent.welcome,
               createdAt: new Date().toISOString(),
             },
           ],
@@ -84,18 +97,19 @@ function loadState() {
     const fresh = createInitialState();
 
     return {
-      activeAgentId: saved.activeAgentId in AGENTS ? saved.activeAgentId : "brandy",
+      activeAgentId: saved.activeAgentId in AGENTS ? saved.activeAgentId : "molly",
       conversations: Object.fromEntries(
-        Object.keys(AGENTS).map((agentId) => [
-          agentId,
+        Object.values(AGENTS).map((agent) => [
+          agent.id,
           {
             sessionId:
-              saved.conversations?.[agentId]?.sessionId || fresh.conversations[agentId].sessionId,
+              saved.conversations?.[agent.id]?.sessionId ||
+              fresh.conversations[agent.id].sessionId,
             messages:
-              Array.isArray(saved.conversations?.[agentId]?.messages) &&
-              saved.conversations[agentId].messages.length > 0
-                ? saved.conversations[agentId].messages
-                : fresh.conversations[agentId].messages,
+              Array.isArray(saved.conversations?.[agent.id]?.messages) &&
+              saved.conversations[agent.id].messages.length > 0
+                ? saved.conversations[agent.id].messages
+                : fresh.conversations[agent.id].messages,
           },
         ]),
       ),
@@ -211,6 +225,7 @@ function App() {
 
   function setActiveAgent(agentId) {
     setState((current) => ({ ...current, activeAgentId: agentId }));
+    setDraft("");
     setError("");
   }
 
@@ -222,7 +237,7 @@ function App() {
         {
           id: `${agentId}-reset-${Date.now()}`,
           role: "assistant",
-          content: AGENTS[agentId].prompt,
+          content: AGENTS[agentId].welcome,
           createdAt: new Date().toISOString(),
         },
       ],
@@ -325,115 +340,161 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
-      <aside className="agent-rail" aria-label="Agent selector">
-        <div className="brand-lockup">
-          <div className="brand-mark">
-            <Sparkles size={20} />
-          </div>
-          <div>
-            <p className="eyebrow">Ascala GHL</p>
-            <h1>Agent Console</h1>
-          </div>
-        </div>
+    <main className="ascala-workspace" style={{ "--agent-accent": activeAgent.accent }}>
+      <Sidebar
+        activeAgent={activeAgent}
+        onSelectAgent={setActiveAgent}
+        onLogout={handleLogout}
+      />
 
-        <div className="agent-tabs" role="tablist" aria-label="Choose agent">
-          {Object.values(AGENTS).map((agent) => {
-            const selected = agent.id === activeAgent.id;
-            const messages = state.conversations[agent.id].messages.length;
-
-            return (
-              <button
-                className={`agent-tab ${selected ? "is-active" : ""}`}
-                key={agent.id}
-                onClick={() => setActiveAgent(agent.id)}
-                role="tab"
-                aria-selected={selected}
-                style={{ "--agent-accent": agent.accent }}
-              >
-                <span className="agent-avatar">
-                  <Bot size={18} />
-                </span>
-                <span className="agent-copy">
-                  <strong>{agent.name}</strong>
-                  <small>{agent.role}</small>
-                </span>
-                <span className="message-count">{messages}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="endpoint-card">
-          <div className="endpoint-heading">
-            <PanelRightOpen size={16} />
-            <span>Webhook</span>
-          </div>
-          <p>{activeAgent.endpoint}</p>
-        </div>
-
-        <button className="logout-button" type="button" onClick={handleLogout}>
-          <LogOut size={17} />
-          <span>Logout</span>
-        </button>
-      </aside>
-
-      <section className="chat-panel" style={{ "--agent-accent": activeAgent.accent }}>
-        <header className="chat-header">
-          <div>
-            <p className="eyebrow">Connected agent</p>
-            <h2>{activeAgent.name}</h2>
-          </div>
-          <div className="header-actions">
-            <span className="status-pill">
-              {isPending ? <Loader2 className="spin" size={15} /> : <Check size={15} />}
-              {isPending ? "Thinking" : "Ready"}
-            </span>
-            <button className="icon-button" type="button" onClick={clearActiveConversation} title="Clear chat">
-              <Eraser size={18} />
-            </button>
+      <section className="studio">
+        <header className="studio-topbar">
+          <div className="title-lockup">
+            <h1>ESCOUADE</h1>
+            <span>AI PRODUCTION TEAM</span>
           </div>
         </header>
 
-        <div className="messages" ref={scrollRef} aria-live="polite">
-          {activeConversation.messages.map((message) => (
-            <MessageBubble key={message.id} message={message} agent={activeAgent} />
-          ))}
-          {isPending && (
-            <div className="typing-row">
-              <span />
-              <span />
-              <span />
-            </div>
-          )}
-        </div>
+        <div className="studio-layout">
+          <div className="main-column">
+            <TeamMembers activeAgent={activeAgent} onSelectAgent={setActiveAgent} />
 
-        {error && (
-          <div className="error-banner" role="alert">
-            <CircleAlert size={17} />
-            <span>{error}</span>
+            <section className="command-card">
+              <div className="section-heading">
+                <div>
+                  <h2>{activeAgent.name.toUpperCase()} COMMAND DECK</h2>
+                  <p>{activeAgent.specialty}.</p>
+                </div>
+                <button className="clear-action" type="button" onClick={clearActiveConversation}>
+                  <Eraser size={16} />
+                  <span>Clear Conversation</span>
+                </button>
+              </div>
+
+              <div className="divider" />
+
+              <div className="chat-console" ref={scrollRef} aria-live="polite">
+                {activeConversation.messages.map((message) => (
+                  <MessageBubble key={message.id} message={message} agent={activeAgent} />
+                ))}
+                {isPending && (
+                  <div className="typing-row">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                )}
+              </div>
+
+              {error && (
+                <div className="error-banner" role="alert">
+                  <CircleAlert size={17} />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <form className="composer" onSubmit={handleSend}>
+                <label className="sr-only" htmlFor="message-input">
+                  Message {activeAgent.name}
+                </label>
+                <textarea
+                  id="message-input"
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={activeAgent.prompt}
+                  rows={2}
+                />
+                <button className="primary-action" type="submit" disabled={!draft.trim() || Boolean(pendingAgentId)}>
+                  {pendingAgentId ? <Loader2 className="spin" size={18} /> : <Send size={18} />}
+                  <span>Send to {activeAgent.name.replace("™", "")}</span>
+                  <ArrowRight size={17} />
+                </button>
+              </form>
+
+              <div className="mountain-line" aria-hidden="true" />
+            </section>
           </div>
-        )}
 
-        <form className="composer" onSubmit={handleSend}>
-          <label className="sr-only" htmlFor="message-input">
-            Message {activeAgent.name}
-          </label>
-          <textarea
-            id="message-input"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={activeAgent.prompt}
-            rows={1}
-          />
-          <button className="send-button" type="submit" disabled={!draft.trim() || Boolean(pendingAgentId)}>
-            {pendingAgentId ? <Loader2 className="spin" size={18} /> : <Send size={18} />}
-            <span>Send</span>
-          </button>
-        </form>
+        </div>
       </section>
     </main>
+  );
+}
+
+function Sidebar({ activeAgent, onSelectAgent, onLogout }) {
+  const navItems = [
+    { id: "molly", label: "Molly™", sublabel: AGENTS.molly.role, icon: Brain },
+    { id: "brandy", label: "Brandy™", sublabel: AGENTS.brandy.role, icon: Mic },
+  ];
+
+  return (
+    <aside className="sidebar" aria-label="Ascala navigation">
+      <div className="brand-stack">
+        <LogoMark />
+      </div>
+
+      <nav className="side-nav">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isAgent = item.id in AGENTS;
+          const isActive = isAgent && item.id === activeAgent.id;
+
+          return (
+            <button
+              className={`nav-item ${isActive ? "is-active" : ""}`}
+              key={item.id}
+              type="button"
+              onClick={() => {
+                if (isAgent) onSelectAgent(item.id);
+              }}
+            >
+              <Icon size={22} />
+              <span>
+                <strong>{item.label}</strong>
+                <small>{item.sublabel}</small>
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
+      <button className="logout-button" type="button" onClick={onLogout}>
+        <LogOut size={17} />
+        <span>Logout</span>
+      </button>
+
+      <footer className="sidebar-footer">© 2025 ASCALA<br />All rights reserved.</footer>
+    </aside>
+  );
+}
+
+function TeamMembers({ activeAgent, onSelectAgent }) {
+  return (
+    <section className="team-strip" aria-labelledby="team-title">
+      <p id="team-title">ESCOUADE TEAM MEMBERS</p>
+      <div className="agent-orbs">
+        {Object.values(AGENTS).map((agent, index) => (
+          <button
+            className={`agent-card ${agent.id === activeAgent.id ? "is-active" : ""}`}
+            key={agent.id}
+            type="button"
+            onClick={() => onSelectAgent(agent.id)}
+            style={{ "--orb-delay": `${index * 90}ms` }}
+          >
+            <span className="agent-orb">
+              <span className="orb-ring" />
+              <span className="orb-face">
+                {agent.id === "molly" ? <Brain size={44} /> : <Mic size={44} />}
+              </span>
+            </span>
+            <strong>{agent.name}</strong>
+            <small>{agent.role}</small>
+          </button>
+        ))}
+
+      </div>
+    </section>
   );
 }
 
@@ -455,14 +516,30 @@ function LoginScreen({ onLogin }) {
   }
 
   return (
-    <main className="login-shell">
+    <main className="login-shell" style={{ "--hero-art": `url("${heroArtworkUrl}")` }}>
+      <section className="login-copy" aria-label="Ascala GHL App">
+        <div className="hero-brand">
+          <LogoMark />
+          <span>
+            <strong>ASCALA</strong>
+            <small>GHL APP</small>
+          </span>
+        </div>
+        <h1>
+          You don't need more tools.
+          <span>You need an AI team.</span>
+        </h1>
+        <div className="hero-rule" />
+        <p>ASCALA — <span>GHL App</span></p>
+      </section>
+
       <section className="login-panel" aria-labelledby="login-title">
         <div className="login-mark">
           <LockKeyhole size={24} />
         </div>
         <div>
-          <p className="eyebrow">Ascala GHL</p>
-          <h1 id="login-title">Admin Login</h1>
+          <p className="eyebrow">Protected Console</p>
+          <h2 id="login-title">Admin Login</h2>
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
@@ -492,8 +569,10 @@ function LoginScreen({ onLogin }) {
           )}
 
           <button className="login-button" type="submit">
-            <LockKeyhole size={18} />
-            <span>Login</span>
+            <span className="arrow-circle">
+              <ArrowRight size={24} />
+            </span>
+            <span>Enter Ascala</span>
           </button>
         </form>
       </section>
@@ -504,7 +583,7 @@ function LoginScreen({ onLogin }) {
 function MessageBubble({ message, agent }) {
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
-  const Icon = isUser ? UserRound : isSystem ? CircleAlert : MessageSquareText;
+  const Icon = isUser ? UserRound : isSystem ? CircleAlert : Sparkles;
 
   return (
     <article className={`message ${isUser ? "from-user" : ""} ${isSystem ? "from-system" : ""}`}>
@@ -519,6 +598,14 @@ function MessageBubble({ message, agent }) {
         <p>{message.content}</p>
       </div>
     </article>
+  );
+}
+
+function LogoMark() {
+  return (
+    <span className="logo-mark" aria-hidden="true">
+      <img src={logoUrl} alt="" />
+    </span>
   );
 }
 
