@@ -5,7 +5,9 @@ import {
   Check,
   CircleAlert,
   Eraser,
+  LockKeyhole,
   Loader2,
+  LogOut,
   MessageSquareText,
   PanelRightOpen,
   Send,
@@ -36,6 +38,9 @@ const AGENTS = {
 };
 
 const STORAGE_KEY = "ascala.agent-console.v1";
+const AUTH_STORAGE_KEY = "ascala.agent-console.authenticated";
+const LOGIN_USERNAME = "admin";
+const LOGIN_PASSWORD = "admin03224515302";
 
 function createSessionId(agentId) {
   if (globalThis.crypto?.randomUUID) {
@@ -170,6 +175,9 @@ async function sendToAgent({ agent, message, sessionId, signal }) {
 }
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = React.useState(
+    () => localStorage.getItem(AUTH_STORAGE_KEY) === "true",
+  );
   const [state, setState] = React.useState(loadState);
   const [draft, setDraft] = React.useState("");
   const [pendingAgentId, setPendingAgentId] = React.useState(null);
@@ -300,6 +308,22 @@ function App() {
     }
   }
 
+  function handleLogin() {
+    localStorage.setItem(AUTH_STORAGE_KEY, "true");
+    setIsAuthenticated(true);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    setIsAuthenticated(false);
+    setDraft("");
+    setError("");
+  }
+
+  if (!isAuthenticated) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
+
   return (
     <main className="app-shell">
       <aside className="agent-rail" aria-label="Agent selector">
@@ -347,6 +371,11 @@ function App() {
           </div>
           <p>{activeAgent.endpoint}</p>
         </div>
+
+        <button className="logout-button" type="button" onClick={handleLogout}>
+          <LogOut size={17} />
+          <span>Logout</span>
+        </button>
       </aside>
 
       <section className="chat-panel" style={{ "--agent-accent": activeAgent.accent }}>
@@ -401,6 +430,70 @@ function App() {
           <button className="send-button" type="submit" disabled={!draft.trim() || Boolean(pendingAgentId)}>
             {pendingAgentId ? <Loader2 className="spin" size={18} /> : <Send size={18} />}
             <span>Send</span>
+          </button>
+        </form>
+      </section>
+    </main>
+  );
+}
+
+function LoginScreen({ onLogin }) {
+  const [username, setUsername] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    if (username.trim() === LOGIN_USERNAME && password === LOGIN_PASSWORD) {
+      setError("");
+      onLogin();
+      return;
+    }
+
+    setError("Invalid username or password.");
+  }
+
+  return (
+    <main className="login-shell">
+      <section className="login-panel" aria-labelledby="login-title">
+        <div className="login-mark">
+          <LockKeyhole size={24} />
+        </div>
+        <div>
+          <p className="eyebrow">Ascala GHL</p>
+          <h1 id="login-title">Admin Login</h1>
+        </div>
+
+        <form className="login-form" onSubmit={handleSubmit}>
+          <label htmlFor="username">Username</label>
+          <input
+            id="username"
+            autoComplete="username"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            autoFocus
+          />
+
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+
+          {error && (
+            <div className="login-error" role="alert">
+              <CircleAlert size={16} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <button className="login-button" type="submit">
+            <LockKeyhole size={18} />
+            <span>Login</span>
           </button>
         </form>
       </section>

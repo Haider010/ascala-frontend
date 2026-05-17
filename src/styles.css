@@ -24,6 +24,7 @@ body {
 }
 
 button,
+input,
 textarea {
   font: inherit;
 }
@@ -225,6 +226,8 @@ h2 {
 
 .status-pill,
 .send-button,
+.login-button,
+.logout-button,
 .icon-button {
   display: inline-flex;
   align-items: center;
@@ -417,6 +420,106 @@ h2 {
 .send-button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+.login-shell {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(14, 124, 102, 0.12), transparent 38%),
+    linear-gradient(315deg, rgba(182, 95, 0, 0.12), transparent 42%),
+    #eef1f4;
+}
+
+.login-panel {
+  display: grid;
+  width: min(100%, 420px);
+  padding: 28px;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-strong);
+  box-shadow: var(--shadow);
+}
+
+.login-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #202428;
+}
+
+.login-form {
+  display: grid;
+  gap: 10px;
+}
+
+.login-form label {
+  color: #30343a;
+  font-size: 0.83rem;
+  font-weight: 800;
+}
+
+.login-form input {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 12px;
+  border: 1px solid #cfd6d1;
+  border-radius: 8px;
+  color: #171a1f;
+  background: #ffffff;
+  outline: none;
+}
+
+.login-form input:focus {
+  border-color: #0e7c66;
+  box-shadow: 0 0 0 3px rgba(14, 124, 102, 0.16);
+}
+
+.login-error {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  margin-top: 4px;
+  padding: 9px 10px;
+  gap: 8px;
+  border: 1px solid #f2b8b5;
+  border-radius: 8px;
+  color: #7a271a;
+  background: #fff0ef;
+  font-size: 0.86rem;
+}
+
+.login-button,
+.logout-button {
+  min-height: 46px;
+  gap: 8px;
+  border-radius: 8px;
+  font-weight: 900;
+}
+
+.login-button {
+  margin-top: 6px;
+  border: 0;
+  color: #ffffff;
+  background: #202428;
+}
+
+.logout-button {
+  width: 100%;
+  border: 1px solid #cfd6d1;
+  color: #343940;
+  background: #ffffff;
+}
+
+.logout-button:hover {
+  border-color: #b7c0ba;
+  background: #f5f6f7;
 }
 
 .spin {
