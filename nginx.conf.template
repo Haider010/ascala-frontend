@@ -25,6 +25,5 @@ server {
 
     # Security headers
     add_header X-Content-Type-Options "nosniff" always;
-    add_header Content-Security-Policy "frame-ancestors 'self' https://app.gohighlevel.com https://*.gohighlevel.com https://*.leadconnectorhq.com https://*.msgsndr.com;" always;
     add_header X-XSS-Protection "1; mode=block" always;
 }

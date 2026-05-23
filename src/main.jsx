@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import {
   ArrowRight,
   Brain,
-  Check,
   CircleAlert,
   Eraser,
   Loader2,
@@ -57,6 +56,8 @@ const STORAGE_KEY = "ascala.agent-console.v1";
 const AUTH_STORAGE_KEY = "ascala.agent-console.authenticated";
 const LOGIN_USERNAME = "admin";
 const LOGIN_PASSWORD = "admin03224515302";
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+const GHL_SESSION_TIMEOUT_MS = 8000;
 
 function createSessionId(agentId) {
   if (globalThis.crypto?.randomUUID) {
@@ -88,9 +89,9 @@ function createInitialState() {
   };
 }
 
-function loadState() {
+function loadState(storageKey = STORAGE_KEY) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return createInitialState();
 
     const saved = JSON.parse(raw);
@@ -160,7 +161,96 @@ function getResponseText(payload) {
   return String(payload);
 }
 
-async function sendToAgent({ agent, message, sessionId, signal }) {
+function isEmbeddedInFrame() {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
+function getQueryParams() {
+  return Object.fromEntries(new URLSearchParams(window.location.search).entries());
+}
+
+function sanitizeStorageScope(value) {
+  return String(value || "direct")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .slice(0, 160);
+}
+
+function requestGhlEncryptedUserData() {
+  return new Promise((resolve, reject) => {
+    if (!isEmbeddedInFrame()) {
+      reject(new Error("This page is not embedded in HighLevel."));
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      window.removeEventListener("message", messageHandler);
+      reject(new Error("HighLevel did not return session details in time."));
+    }, GHL_SESSION_TIMEOUT_MS);
+
+    function messageHandler(event) {
+      if (event.data?.message !== "REQUEST_USER_DATA_RESPONSE") return;
+
+      window.clearTimeout(timeout);
+      window.removeEventListener("message", messageHandler);
+      resolve(event.data.payload);
+    }
+
+    window.addEventListener("message", messageHandler);
+    window.parent.postMessage({ message: "REQUEST_USER_DATA" }, "*");
+  });
+}
+
+async function createGhlSession({ encryptedData, signal }) {
+  const response = await fetch(`${API_BASE_URL}/ghl/session`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      encryptedData,
+      queryParams: getQueryParams(),
+    }),
+    signal,
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.detail || "Unable to verify the HighLevel session.");
+  }
+
+  return payload;
+}
+
+async function sendToAgent({ agent, message, sessionId, signal, appSessionToken }) {
+  if (appSessionToken) {
+    const response = await fetch(`${API_BASE_URL}/agent-chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${appSessionToken}`,
+      },
+      body: JSON.stringify({
+        agentId: agent.id,
+        message,
+        sessionId,
+      }),
+      signal,
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(getResponseText(payload.detail) || payload.detail || "The agent request failed.");
+    }
+
+    return getResponseText(payload.payload) || "I received the message, but no text response came back.";
+  }
+
   const response = await fetch(agent.endpoint, {
     method: "POST",
     headers: {
@@ -189,10 +279,17 @@ async function sendToAgent({ agent, message, sessionId, signal }) {
 }
 
 function App() {
+  const [isEmbedded] = React.useState(isEmbeddedInFrame);
+  const [ghlSession, setGhlSession] = React.useState({
+    status: isEmbeddedInFrame() ? "checking" : "idle",
+    data: null,
+    error: "",
+  });
+  const [storageKey, setStorageKey] = React.useState(STORAGE_KEY);
   const [isAuthenticated, setIsAuthenticated] = React.useState(
-    () => localStorage.getItem(AUTH_STORAGE_KEY) === "true",
+    () => !isEmbeddedInFrame() && localStorage.getItem(AUTH_STORAGE_KEY) === "true",
   );
-  const [state, setState] = React.useState(loadState);
+  const [state, setState] = React.useState(() => loadState(STORAGE_KEY));
   const [draft, setDraft] = React.useState("");
   const [pendingAgentId, setPendingAgentId] = React.useState(null);
   const [error, setError] = React.useState("");
@@ -203,8 +300,43 @@ function App() {
   const isPending = pendingAgentId === activeAgent.id;
 
   React.useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+    if (!isEmbedded) return;
+
+    const controller = new AbortController();
+
+    async function verifyGhlSession() {
+      try {
+        const encryptedData = await requestGhlEncryptedUserData();
+        const session = await createGhlSession({
+          encryptedData,
+          signal: controller.signal,
+        });
+        const scopedStorageKey = `${STORAGE_KEY}.${sanitizeStorageScope(session.storageScope)}`;
+
+        setStorageKey(scopedStorageKey);
+        setState(loadState(scopedStorageKey));
+        setGhlSession({ status: "ready", data: session, error: "" });
+        setIsAuthenticated(true);
+      } catch (sessionError) {
+        if (controller.signal.aborted) return;
+        setGhlSession({
+          status: "error",
+          data: null,
+          error: sessionError.message || "Unable to verify the HighLevel session.",
+        });
+        setIsAuthenticated(false);
+      }
+    }
+
+    verifyGhlSession();
+
+    return () => controller.abort();
+  }, [isEmbedded]);
+
+  React.useEffect(() => {
+    if (!isAuthenticated) return;
+    localStorage.setItem(storageKey, JSON.stringify(state));
+  }, [isAuthenticated, state, storageKey]);
 
   React.useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -277,6 +409,7 @@ function App() {
         message,
         sessionId: conversation.sessionId,
         signal: controller.signal,
+        appSessionToken: ghlSession.data?.sessionToken,
       });
 
       updateConversation(agent.id, (current) => ({
@@ -324,15 +457,22 @@ function App() {
   }
 
   function handleLogin() {
+    if (isEmbedded) return;
     localStorage.setItem(AUTH_STORAGE_KEY, "true");
     setIsAuthenticated(true);
   }
 
   function handleLogout() {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    if (!isEmbedded) {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    }
     setIsAuthenticated(false);
     setDraft("");
     setError("");
+  }
+
+  if (isEmbedded && !isAuthenticated) {
+    return <GhlSessionScreen status={ghlSession.status} error={ghlSession.error} />;
   }
 
   if (!isAuthenticated) {
@@ -495,6 +635,29 @@ function TeamMembers({ activeAgent, onSelectAgent }) {
 
       </div>
     </section>
+  );
+}
+
+function GhlSessionScreen({ status, error }) {
+  const isError = status === "error";
+
+  return (
+    <main className="login-shell session-shell">
+      <section className="login-panel session-panel" aria-labelledby="session-title">
+        <div className="login-mark">
+          {isError ? <CircleAlert size={24} /> : <Loader2 className="spin" size={24} />}
+        </div>
+        <div>
+          <p className="eyebrow">HighLevel Session</p>
+          <h2 id="session-title">{isError ? "Access unavailable" : "Connecting to GHL"}</h2>
+        </div>
+        <p className="session-copy">
+          {isError
+            ? error || "Unable to verify this HighLevel account."
+            : "Verifying your signed HighLevel context and loading the correct workspace."}
+        </p>
+      </section>
+    </main>
   );
 }
 
