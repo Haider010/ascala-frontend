@@ -56,7 +56,11 @@ const STORAGE_KEY = "ascala.agent-console.v1";
 const AUTH_STORAGE_KEY = "ascala.agent-console.authenticated";
 const LOGIN_USERNAME = "admin";
 const LOGIN_PASSWORD = "admin03224515302";
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+const API_BASE_URL = (
+  globalThis.__ASCALA_CONFIG__?.apiBaseUrl ||
+  import.meta.env.VITE_API_BASE_URL ||
+  ""
+).replace(/\/$/, "");
 const GHL_SESSION_TIMEOUT_MS = 8000;
 
 function getApiUrl(path) {
