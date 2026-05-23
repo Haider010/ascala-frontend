@@ -144,7 +144,12 @@ export function App() {
 
   return (
     <main className="ascala-workspace" style={{ "--agent-accent": activeAgent.accent }}>
-      <Sidebar activeAgent={activeAgent} onSelectAgent={setActiveAgent} onLogout={handleLogout} />
+      <Sidebar
+        activeAgent={activeAgent}
+        showLogout={!isEmbedded}
+        onSelectAgent={setActiveAgent}
+        onLogout={handleLogout}
+      />
 
       <section className="studio">
         <header className="studio-topbar">

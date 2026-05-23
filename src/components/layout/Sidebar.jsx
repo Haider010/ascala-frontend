@@ -2,7 +2,7 @@ import { Brain, LogOut, Mic } from "lucide-react";
 import { AGENTS } from "../../config/agents";
 import { LogoMark } from "../shared/LogoMark";
 
-export function Sidebar({ activeAgent, onSelectAgent, onLogout }) {
+export function Sidebar({ activeAgent, showLogout = true, onSelectAgent, onLogout }) {
   const navItems = [
     { id: "molly", label: "Molly\u2122", sublabel: AGENTS.molly.role, icon: Brain },
     { id: "brandy", label: "Brandy\u2122", sublabel: AGENTS.brandy.role, icon: Mic },
@@ -39,10 +39,12 @@ export function Sidebar({ activeAgent, onSelectAgent, onLogout }) {
         })}
       </nav>
 
-      <button className="logout-button" type="button" onClick={onLogout}>
-        <LogOut size={17} />
-        <span>Logout</span>
-      </button>
+      {showLogout && (
+        <button className="logout-button" type="button" onClick={onLogout}>
+          <LogOut size={17} />
+          <span>Logout</span>
+        </button>
+      )}
 
       <footer className="sidebar-footer">
         &copy; 2025 ASCALA
