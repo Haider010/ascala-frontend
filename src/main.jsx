@@ -59,6 +59,14 @@ const LOGIN_PASSWORD = "admin03224515302";
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 const GHL_SESSION_TIMEOUT_MS = 8000;
 
+function getApiUrl(path) {
+  if (!API_BASE_URL) {
+    throw new Error("Frontend is missing VITE_API_BASE_URL. Set it to the backend FastAPI URL and redeploy.");
+  }
+
+  return `${API_BASE_URL}${path}`;
+}
+
 function createSessionId(agentId) {
   if (globalThis.crypto?.randomUUID) {
     return `${agentId}-${globalThis.crypto.randomUUID()}`;
@@ -205,7 +213,7 @@ function requestGhlEncryptedUserData() {
 }
 
 async function createGhlSession({ encryptedData, signal }) {
-  const response = await fetch(`${API_BASE_URL}/ghl/session`, {
+  const response = await fetch(getApiUrl("/ghl/session"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -228,7 +236,7 @@ async function createGhlSession({ encryptedData, signal }) {
 
 async function sendToAgent({ agent, message, sessionId, signal, appSessionToken }) {
   if (appSessionToken) {
-    const response = await fetch(`${API_BASE_URL}/agent-chat`, {
+    const response = await fetch(getApiUrl("/agent-chat"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
