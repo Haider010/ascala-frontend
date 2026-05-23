@@ -26,7 +26,6 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx configuration template
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
-COPY runtime-env.template.js /etc/nginx/templates/runtime-env.js.template
 
 # Expose port 3000
 EXPOSE 3000
