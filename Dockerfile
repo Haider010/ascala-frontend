@@ -32,4 +32,4 @@ COPY runtime-env.template.js /etc/nginx/templates/runtime-env.js.template
 EXPOSE 3000
 
 # Start nginx after writing runtime frontend config from Railway env vars.
-CMD ["/bin/sh", "-c", "envsubst < /etc/nginx/templates/runtime-env.js.template > /usr/share/nginx/html/runtime-env.js && nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "printf 'window.__ASCALA_CONFIG__ = {\\n  apiBaseUrl: \"%s\"\\n};\\n' \"$VITE_API_BASE_URL\" > /usr/share/nginx/html/runtime-env.js && nginx -g 'daemon off;'"]
