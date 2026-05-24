@@ -1,7 +1,6 @@
 import React from "react";
 import { AGENTS } from "../config/agents";
 import { AUTH_STORAGE_KEY } from "../config/auth";
-import { API_BASE_URL } from "../config/runtime";
 import { STORAGE_KEY } from "../config/storage";
 import { fetchAgentHistory } from "../services/agents";
 import { createDirectDevSession, createGhlSession, requestGhlEncryptedUserData } from "../services/ghl";
@@ -27,8 +26,8 @@ function mergeHistoriesIntoState(histories) {
   return fresh;
 }
 
-function loadAgentHistories(sessionToken, signal) {
-  return Promise.all(
+async function loadAgentHistories(sessionToken, signal) {
+  const results = await Promise.allSettled(
     Object.keys(AGENTS).map((agentId) =>
       fetchAgentHistory({
         agentId,
@@ -37,6 +36,11 @@ function loadAgentHistories(sessionToken, signal) {
       }),
     ),
   );
+  const histories = results
+    .filter((result) => result.status === "fulfilled")
+    .map((result) => result.value);
+
+  return histories;
 }
 
 export function useAgentConsole() {
@@ -57,6 +61,7 @@ export function useAgentConsole() {
 
   const activeAgent = AGENTS[state.activeAgentId];
   const activeConversation = state.conversations[state.activeAgentId];
+  const isConversationLoading = isAuthenticated && ghlSession.status === "checking";
 
   React.useEffect(() => {
     localStorage.removeItem(STORAGE_KEY);
@@ -99,15 +104,13 @@ export function useAgentConsole() {
     if (
       isEmbedded ||
       !isAuthenticated ||
-      !API_BASE_URL ||
-      ghlSession.data?.sessionToken ||
-      ghlSession.status === "checking" ||
       directSessionAttemptedRef.current
     ) {
       return;
     }
 
     const controller = new AbortController();
+    let completed = false;
     directSessionAttemptedRef.current = true;
 
     async function verifyDirectDevSession() {
@@ -115,12 +118,23 @@ export function useAgentConsole() {
 
       try {
         const session = await createDirectDevSession({ signal: controller.signal });
+        if (controller.signal.aborted) return;
+
+        if (!session.sessionToken) {
+          throw new Error("Direct dev session response did not include a session token.");
+        }
+
         const histories = await loadAgentHistories(session.sessionToken, controller.signal);
+        if (controller.signal.aborted) return;
 
         setState(mergeHistoriesIntoState(histories));
         setGhlSession({ status: "ready", data: session, error: "" });
+        completed = true;
       } catch (sessionError) {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          directSessionAttemptedRef.current = false;
+          return;
+        }
         setGhlSession({ status: "idle", data: null, error: "" });
         setError(sessionError.message || "Unable to create the direct dev session.");
       }
@@ -128,8 +142,13 @@ export function useAgentConsole() {
 
     verifyDirectDevSession();
 
-    return () => controller.abort();
-  }, [ghlSession.data?.sessionToken, ghlSession.status, isAuthenticated, isEmbedded]);
+    return () => {
+      if (!completed) {
+        directSessionAttemptedRef.current = false;
+      }
+      controller.abort();
+    };
+  }, [isAuthenticated, isEmbedded]);
 
   function updateConversation(agentId, updater) {
     setState((current) => ({
@@ -173,6 +192,7 @@ export function useAgentConsole() {
     ghlSession,
     isAuthenticated,
     isEmbedded,
+    isConversationLoading,
     pendingAgentId,
     setActiveAgent,
     setDraft,

@@ -515,6 +515,45 @@ textarea {
   animation-delay: 240ms;
 }
 
+.history-loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}
+
+.history-loader {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 74px;
+  height: 42px;
+  gap: 6px;
+  border: 1px solid rgba(168, 85, 255, 0.26);
+  border-radius: 999px;
+  background: rgba(43, 18, 67, 0.46);
+  box-shadow:
+    0 0 28px rgba(168, 85, 255, 0.16),
+    inset 0 0 18px rgba(168, 85, 255, 0.08);
+}
+
+.history-loader span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--agent-accent);
+  box-shadow: 0 0 10px rgba(168, 85, 255, 0.8);
+  animation: bounce 1s infinite ease-in-out;
+}
+
+.history-loader span:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.history-loader span:nth-child(3) {
+  animation-delay: 240ms;
+}
+
 .error-banner {
   display: flex;
   align-items: center;
@@ -553,6 +592,11 @@ textarea {
   background: rgba(0, 0, 0, 0.34);
   line-height: 1.45;
   outline: none;
+}
+
+.composer textarea:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .composer textarea:focus,

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Loader2, Send } from "lucide-react";
 
-export function Composer({ activeAgent, draft, pendingAgentId, onDraftChange, onKeyDown, onSend }) {
+export function Composer({ activeAgent, disabled = false, draft, pendingAgentId, onDraftChange, onKeyDown, onSend }) {
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -28,13 +28,14 @@ export function Composer({ activeAgent, draft, pendingAgentId, onDraftChange, on
         value={draft}
         onChange={(event) => onDraftChange(event.target.value)}
         onKeyDown={onKeyDown}
-        placeholder={activeAgent.prompt}
+        placeholder={disabled ? "Loading conversation..." : activeAgent.prompt}
         rows={1}
+        disabled={disabled}
       />
       <button
         className="send-icon-button"
         type="submit"
-        disabled={!draft.trim() || Boolean(pendingAgentId)}
+        disabled={disabled || !draft.trim() || Boolean(pendingAgentId)}
         aria-label={`Send to ${activeAgent.name.replace("\u2122", "")}`}
       >
         {pendingAgentId ? <Loader2 className="spin" size={18} /> : <Send size={18} />}

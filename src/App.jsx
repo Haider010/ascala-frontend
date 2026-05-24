@@ -7,7 +7,6 @@ import { MessageBubble } from "./components/chat/MessageBubble";
 import { Composer } from "./components/chat/Composer";
 import { GhlSessionScreen } from "./features/ghl/GhlSessionScreen";
 import { LoginScreen } from "./features/auth/LoginScreen";
-import { API_BASE_URL } from "./config/runtime";
 
 export function App() {
   const {
@@ -18,6 +17,7 @@ export function App() {
     ghlSession,
     isAuthenticated,
     isEmbedded,
+    isConversationLoading,
     pendingAgentId,
     setActiveAgent,
     setDraft,
@@ -29,21 +29,22 @@ export function App() {
   } = useAgentConsole();
   const scrollRef = React.useRef(null);
   const isPending = pendingAgentId === activeAgent.id;
+  const isComposerDisabled = isConversationLoading || !ghlSession.data?.sessionToken;
 
   React.useEffect(() => {
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [activeConversation.messages, activeAgent.id]);
+  }, [activeConversation.messages, activeAgent.id, isConversationLoading]);
 
   async function handleSend(event) {
     event?.preventDefault();
 
     const message = draft.trim();
-    if (!message || pendingAgentId) return;
+    if (!message || pendingAgentId || isConversationLoading) return;
 
-    if (API_BASE_URL && !ghlSession.data?.sessionToken) {
+    if (!ghlSession.data?.sessionToken) {
       setError("Backend account session is not ready yet.");
       return;
     }
@@ -116,6 +117,11 @@ export function App() {
   }
 
   function handleKeyDown(event) {
+    if (isComposerDisabled) {
+      event.preventDefault();
+      return;
+    }
+
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       handleSend(event);
@@ -150,10 +156,20 @@ export function App() {
           <div className="main-column">
             <section className="command-card">
               <div className="chat-console" ref={scrollRef} aria-live="polite">
-                {activeConversation.messages.map((message) => (
-                  <MessageBubble key={message.id} message={message} agent={activeAgent} />
-                ))}
-                {isPending && (
+                {isConversationLoading ? (
+                  <div className="history-loading-state" role="status" aria-label="Loading conversation">
+                    <span className="history-loader" aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                  </div>
+                ) : (
+                  activeConversation.messages.map((message) => (
+                    <MessageBubble key={message.id} message={message} agent={activeAgent} />
+                  ))
+                )}
+                {!isConversationLoading && isPending && (
                   <div className="typing-row">
                     <span />
                     <span />
@@ -171,6 +187,7 @@ export function App() {
 
               <Composer
                 activeAgent={activeAgent}
+                disabled={isComposerDisabled}
                 draft={draft}
                 pendingAgentId={pendingAgentId}
                 onDraftChange={setDraft}
