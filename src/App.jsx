@@ -24,6 +24,8 @@ export function App() {
     setError,
     setPendingAgentId,
     updateConversation,
+    workflowStatus,
+    applyWorkflowStatus,
     handleLogin,
     handleLogout,
   } = useAgentConsole();
@@ -70,7 +72,7 @@ export function App() {
     const timeout = window.setTimeout(() => controller.abort(), 90000);
 
     try {
-      const { reply, sessionId } = await sendToAgent({
+      const { reply, sessionId, workflowStatus: nextWorkflowStatus } = await sendToAgent({
         agent,
         message,
         sessionId: conversation.sessionId,
@@ -91,6 +93,7 @@ export function App() {
           },
         ],
       }));
+      applyWorkflowStatus(nextWorkflowStatus);
     } catch (requestError) {
       const description =
         requestError.name === "AbortError"
@@ -140,6 +143,7 @@ export function App() {
     <main className="ascala-workspace" style={{ "--agent-accent": activeAgent.accent }}>
       <Sidebar
         activeAgent={activeAgent}
+        workflowStatus={workflowStatus}
         showLogout={!isEmbedded}
         onSelectAgent={setActiveAgent}
         onLogout={handleLogout}

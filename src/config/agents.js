@@ -30,3 +30,11 @@ export const AGENTS = {
 };
 
 export const DEFAULT_AGENT_ID = "molly";
+
+export const AGENT_WORKFLOW = [
+  { id: "molly", name: "Molly\u2122", role: "Audience Intelligence", available: true },
+  { id: "brandy", name: "Brandy\u2122", role: "Brand Voice", available: true },
+  { id: "sacha", name: "Sacha\u2122", role: "Strategy Director", available: false },
+  { id: "escouade", name: "Escouade\u2122", role: "AI Production Team", available: false },
+  { id: "uply", name: "Uply\u2122", role: "Publishing Assistant", available: false },
+];

@@ -1,5 +1,5 @@
 import React from "react";
-import { AGENTS } from "../config/agents";
+import { AGENTS, AGENT_WORKFLOW } from "../config/agents";
 import { AUTH_STORAGE_KEY } from "../config/auth";
 import { STORAGE_KEY } from "../config/storage";
 import { fetchAgentHistory } from "../services/agents";
@@ -24,6 +24,28 @@ function mergeHistoriesIntoState(histories) {
   }
 
   return fresh;
+}
+
+function createDefaultWorkflowStatus() {
+  return {
+    currentAgentId: "molly",
+    steps: AGENT_WORKFLOW.map((step, index) => ({
+      ...step,
+      status: index === 0 ? "current" : "locked",
+      locked: index !== 0,
+      completed: false,
+    })),
+  };
+}
+
+function getSelectableAgentId(workflowStatus, fallbackAgentId) {
+  const currentAgentId = workflowStatus?.currentAgentId;
+  if (currentAgentId in AGENTS) return currentAgentId;
+
+  const firstUnlocked = workflowStatus?.steps?.find((step) => !step.locked && step.available && step.id in AGENTS);
+  if (firstUnlocked) return firstUnlocked.id;
+
+  return fallbackAgentId in AGENTS ? fallbackAgentId : "molly";
 }
 
 async function loadAgentHistories(sessionToken, signal) {
@@ -65,11 +87,24 @@ export function useAgentConsole() {
   const [draft, setDraft] = React.useState("");
   const [pendingAgentId, setPendingAgentId] = React.useState(null);
   const [error, setError] = React.useState("");
+  const [workflowStatus, setWorkflowStatus] = React.useState(createDefaultWorkflowStatus);
   const directSessionAttemptedRef = React.useRef(false);
 
   const activeAgent = AGENTS[state.activeAgentId];
   const activeConversation = state.conversations[state.activeAgentId];
   const isConversationLoading = isAuthenticated && ghlSession.status === "checking";
+
+  function applyWorkflowStatus(nextWorkflowStatus, moveToCurrent = true) {
+    if (!nextWorkflowStatus) return;
+
+    setWorkflowStatus(nextWorkflowStatus);
+    if (!moveToCurrent) return;
+
+    setState((current) => ({
+      ...current,
+      activeAgentId: getSelectableAgentId(nextWorkflowStatus, current.activeAgentId),
+    }));
+  }
 
   React.useEffect(() => {
     localStorage.removeItem(STORAGE_KEY);
@@ -89,7 +124,12 @@ export function useAgentConsole() {
         });
         const histories = await getSessionHistories(session, controller.signal);
 
-        setState(mergeHistoriesIntoState(histories));
+        const nextWorkflowStatus = session.workflowStatus || createDefaultWorkflowStatus();
+        setState({
+          ...mergeHistoriesIntoState(histories),
+          activeAgentId: getSelectableAgentId(nextWorkflowStatus, state.activeAgentId),
+        });
+        applyWorkflowStatus(nextWorkflowStatus, false);
         setGhlSession({ status: "ready", data: session, error: "" });
         setIsAuthenticated(true);
       } catch (sessionError) {
@@ -135,7 +175,12 @@ export function useAgentConsole() {
         const histories = await getSessionHistories(session, controller.signal);
         if (controller.signal.aborted) return;
 
-        setState(mergeHistoriesIntoState(histories));
+        const nextWorkflowStatus = session.workflowStatus || createDefaultWorkflowStatus();
+        setState({
+          ...mergeHistoriesIntoState(histories),
+          activeAgentId: getSelectableAgentId(nextWorkflowStatus, state.activeAgentId),
+        });
+        applyWorkflowStatus(nextWorkflowStatus, false);
         setGhlSession({ status: "ready", data: session, error: "" });
         completed = true;
       } catch (sessionError) {
@@ -169,6 +214,9 @@ export function useAgentConsole() {
   }
 
   function setActiveAgent(agentId) {
+    const step = workflowStatus.steps.find((item) => item.id === agentId);
+    if (!step || step.locked || !step.available || !(agentId in AGENTS)) return;
+
     setState((current) => ({ ...current, activeAgentId: agentId }));
     setDraft("");
     setError("");
@@ -207,6 +255,8 @@ export function useAgentConsole() {
     setError,
     setPendingAgentId,
     updateConversation,
+    workflowStatus,
+    applyWorkflowStatus,
     handleLogin,
     handleLogout,
   };

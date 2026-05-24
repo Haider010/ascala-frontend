@@ -47,5 +47,6 @@ export async function sendToAgent({ agent, message, sessionId, signal, appSessio
   return {
     reply: getResponseText(payload.payload) || "I received the message, but no text response came back.",
     sessionId: payload.sessionId || sessionId,
+    workflowStatus: payload.workflowStatus || null,
   };
 }
