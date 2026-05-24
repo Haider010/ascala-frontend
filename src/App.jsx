@@ -1,15 +1,13 @@
 import React from "react";
-import { ArrowRight, CircleAlert, Eraser } from "lucide-react";
-import { AGENTS } from "./config/agents";
-import { createSessionId } from "./utils/session";
+import { CircleAlert } from "lucide-react";
 import { sendToAgent } from "./services/agents";
 import { useAgentConsole } from "./hooks/useAgentConsole";
 import { Sidebar } from "./components/layout/Sidebar";
-import { TeamMembers } from "./components/layout/TeamMembers";
 import { MessageBubble } from "./components/chat/MessageBubble";
 import { Composer } from "./components/chat/Composer";
 import { GhlSessionScreen } from "./features/ghl/GhlSessionScreen";
 import { LoginScreen } from "./features/auth/LoginScreen";
+import { API_BASE_URL } from "./config/runtime";
 
 export function App() {
   const {
@@ -39,27 +37,16 @@ export function App() {
     });
   }, [activeConversation.messages, activeAgent.id]);
 
-  function clearActiveConversation() {
-    const agentId = activeAgent.id;
-    updateConversation(agentId, () => ({
-      sessionId: createSessionId(agentId),
-      messages: [
-        {
-          id: `${agentId}-reset-${Date.now()}`,
-          role: "assistant",
-          content: AGENTS[agentId].welcome,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    }));
-    setError("");
-  }
-
   async function handleSend(event) {
     event?.preventDefault();
 
     const message = draft.trim();
     if (!message || pendingAgentId) return;
+
+    if (API_BASE_URL && !ghlSession.data?.sessionToken) {
+      setError("Backend account session is not ready yet.");
+      return;
+    }
 
     const agent = activeAgent;
     const conversation = activeConversation;
@@ -82,7 +69,7 @@ export function App() {
     const timeout = window.setTimeout(() => controller.abort(), 90000);
 
     try {
-      const reply = await sendToAgent({
+      const { reply, sessionId } = await sendToAgent({
         agent,
         message,
         sessionId: conversation.sessionId,
@@ -92,6 +79,7 @@ export function App() {
 
       updateConversation(agent.id, (current) => ({
         ...current,
+        sessionId: sessionId || current.sessionId,
         messages: [
           ...current.messages,
           {
@@ -154,29 +142,13 @@ export function App() {
       <section className="studio">
         <header className="studio-topbar">
           <div className="title-lockup">
-            <h1>ESCOUADE</h1>
-            <span>AI PRODUCTION TEAM</span>
+            <h1>{activeAgent.name}</h1>
           </div>
         </header>
 
         <div className="studio-layout">
           <div className="main-column">
-            <TeamMembers activeAgent={activeAgent} onSelectAgent={setActiveAgent} />
-
             <section className="command-card">
-              <div className="section-heading">
-                <div>
-                  <h2>{activeAgent.name.toUpperCase()} COMMAND DECK</h2>
-                  <p>{activeAgent.specialty}.</p>
-                </div>
-                <button className="clear-action" type="button" onClick={clearActiveConversation}>
-                  <Eraser size={16} />
-                  <span>Clear Conversation</span>
-                </button>
-              </div>
-
-              <div className="divider" />
-
               <div className="chat-console" ref={scrollRef} aria-live="polite">
                 {activeConversation.messages.map((message) => (
                   <MessageBubble key={message.id} message={message} agent={activeAgent} />

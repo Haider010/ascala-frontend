@@ -49,3 +49,22 @@ export async function createGhlSession({ encryptedData, signal }) {
 
   return payload;
 }
+
+
+export async function createDirectDevSession({ signal } = {}) {
+  const response = await fetch(getApiUrl("/dev/session"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    signal,
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.detail || "Unable to create the direct dev session.");
+  }
+
+  return payload;
+}
