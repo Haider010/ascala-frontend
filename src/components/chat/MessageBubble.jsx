@@ -1,4 +1,25 @@
 import { CircleAlert, Sparkles, UserRound } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+function MessageMarkdown({ content }) {
+  return (
+    <div className="message-markdown">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          a: ({ children, ...props }) => (
+            <a {...props} target="_blank" rel="noreferrer">
+              {children}
+            </a>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+}
 
 export function MessageBubble({ message, agent }) {
   const isUser = message.role === "user";
@@ -11,7 +32,7 @@ export function MessageBubble({ message, agent }) {
         <Icon size={16} />
       </div>
       <div className="message-body">
-        <p>{message.content}</p>
+        {isUser ? <p>{message.content}</p> : <MessageMarkdown content={message.content} />}
       </div>
     </article>
   );
