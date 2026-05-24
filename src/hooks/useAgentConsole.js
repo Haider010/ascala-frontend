@@ -43,6 +43,14 @@ async function loadAgentHistories(sessionToken, signal) {
   return histories;
 }
 
+async function getSessionHistories(session, signal) {
+  if (Array.isArray(session.histories)) {
+    return session.histories;
+  }
+
+  return loadAgentHistories(session.sessionToken, signal);
+}
+
 export function useAgentConsole() {
   const [isEmbedded] = React.useState(isEmbeddedInFrame);
   const [ghlSession, setGhlSession] = React.useState({
@@ -79,7 +87,7 @@ export function useAgentConsole() {
           encryptedData,
           signal: controller.signal,
         });
-        const histories = await loadAgentHistories(session.sessionToken, controller.signal);
+        const histories = await getSessionHistories(session, controller.signal);
 
         setState(mergeHistoriesIntoState(histories));
         setGhlSession({ status: "ready", data: session, error: "" });
@@ -124,7 +132,7 @@ export function useAgentConsole() {
           throw new Error("Direct dev session response did not include a session token.");
         }
 
-        const histories = await loadAgentHistories(session.sessionToken, controller.signal);
+        const histories = await getSessionHistories(session, controller.signal);
         if (controller.signal.aborted) return;
 
         setState(mergeHistoriesIntoState(histories));
