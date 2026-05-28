@@ -1,11 +1,14 @@
 import React from "react";
-import { AGENTS, AGENT_WORKFLOW } from "../config/agents";
+import { AGENTS, AGENT_WORKFLOW, WORKSPACES } from "../config/agents";
 import { AUTH_STORAGE_KEY } from "../config/auth";
 import { STORAGE_KEY } from "../config/storage";
 import { fetchAgentHistory } from "../services/agents";
 import { createDirectDevSession, createGhlSession, requestGhlEncryptedUserData } from "../services/ghl";
 import { createInitialState } from "../state/conversations";
 import { isEmbeddedInFrame } from "../utils/session";
+
+const EMPTY_CONVERSATION = { sessionId: null, messages: [] };
+const DEV_UNLOCK_STORAGE_KEY = "ascala-dev-unlock-all";
 
 function mergeHistoriesIntoState(histories) {
   const fresh = createInitialState();
@@ -38,14 +41,33 @@ function createDefaultWorkflowStatus() {
   };
 }
 
+function unlockWorkflowStatus(status) {
+  return {
+    currentAgentId: status?.currentAgentId || "molly",
+    steps: (status?.steps || AGENT_WORKFLOW).map((step) => ({
+      ...step,
+      available: step.id in WORKSPACES,
+      locked: !(step.id in WORKSPACES),
+      status:
+        step.status === "completed"
+          ? "completed"
+          : step.status === "current"
+            ? "current"
+            : step.id in WORKSPACES
+              ? "available"
+              : "locked",
+    })),
+  };
+}
+
 function getSelectableAgentId(workflowStatus, fallbackAgentId) {
   const currentAgentId = workflowStatus?.currentAgentId;
-  if (currentAgentId in AGENTS) return currentAgentId;
+  if (currentAgentId in WORKSPACES) return currentAgentId;
 
-  const firstUnlocked = workflowStatus?.steps?.find((step) => !step.locked && step.available && step.id in AGENTS);
+  const firstUnlocked = workflowStatus?.steps?.find((step) => !step.locked && step.available && step.id in WORKSPACES);
   if (firstUnlocked) return firstUnlocked.id;
 
-  return fallbackAgentId in AGENTS ? fallbackAgentId : "molly";
+  return fallbackAgentId in WORKSPACES ? fallbackAgentId : "molly";
 }
 
 async function loadAgentHistories(sessionToken, signal) {
@@ -88,11 +110,26 @@ export function useAgentConsole() {
   const [pendingAgentId, setPendingAgentId] = React.useState(null);
   const [error, setError] = React.useState("");
   const [workflowStatus, setWorkflowStatus] = React.useState(createDefaultWorkflowStatus);
+  const [devUnlockAll, setDevUnlockAllState] = React.useState(
+    () => !isEmbeddedInFrame() && localStorage.getItem(DEV_UNLOCK_STORAGE_KEY) === "true",
+  );
   const directSessionAttemptedRef = React.useRef(false);
 
-  const activeAgent = AGENTS[state.activeAgentId];
-  const activeConversation = state.conversations[state.activeAgentId];
+  const effectiveWorkflowStatus = React.useMemo(
+    () => (devUnlockAll && !isEmbedded ? unlockWorkflowStatus(workflowStatus) : workflowStatus),
+    [devUnlockAll, isEmbedded, workflowStatus],
+  );
+  const activeAgent = WORKSPACES[state.activeAgentId] || WORKSPACES.molly;
+  const activeConversation = state.conversations[state.activeAgentId] || EMPTY_CONVERSATION;
   const isConversationLoading = isAuthenticated && ghlSession.status === "checking";
+
+  function setDevUnlockAll(value) {
+    const nextValue = Boolean(value);
+    setDevUnlockAllState(nextValue);
+    if (!isEmbedded) {
+      localStorage.setItem(DEV_UNLOCK_STORAGE_KEY, String(nextValue));
+    }
+  }
 
   function applyWorkflowStatus(nextWorkflowStatus, moveToCurrent = true) {
     if (!nextWorkflowStatus) return;
@@ -214,8 +251,8 @@ export function useAgentConsole() {
   }
 
   function setActiveAgent(agentId) {
-    const step = workflowStatus.steps.find((item) => item.id === agentId);
-    if (!step || step.locked || !step.available || !(agentId in AGENTS)) return;
+    const step = effectiveWorkflowStatus.steps.find((item) => item.id === agentId);
+    if (!step || step.locked || !step.available || !(agentId in WORKSPACES)) return;
 
     setState((current) => ({ ...current, activeAgentId: agentId }));
     setDraft("");
@@ -234,6 +271,7 @@ export function useAgentConsole() {
       localStorage.removeItem(AUTH_STORAGE_KEY);
     }
     directSessionAttemptedRef.current = false;
+    setDevUnlockAll(false);
     setGhlSession({ status: "idle", data: null, error: "" });
     setIsAuthenticated(false);
     setDraft("");
@@ -245,6 +283,8 @@ export function useAgentConsole() {
     activeConversation,
     draft,
     error,
+    devUnlockAll,
+    effectiveWorkflowStatus,
     ghlSession,
     isAuthenticated,
     isEmbedded,
@@ -252,6 +292,7 @@ export function useAgentConsole() {
     pendingAgentId,
     setActiveAgent,
     setDraft,
+    setDevUnlockAll,
     setError,
     setPendingAgentId,
     updateConversation,

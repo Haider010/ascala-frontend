@@ -43,12 +43,28 @@ export const AGENTS = {
   },
 };
 
+export const WORKSPACES = {
+  ...AGENTS,
+  escouade: {
+    id: "escouade",
+    name: "Escouade\u2122",
+    role: "AI Production Team",
+    accent: "#d8b4fe",
+    accentSoft: "#7e22ce",
+    mode: "AI Production Team",
+    specialty: "Batch content generation, approval, export",
+    prompt: "Set up a content batch for Escouade.",
+    welcome: "Escouade\u2122 is ready to turn approved strategy into production-ready content batches.",
+    kind: "production",
+  },
+};
+
 export const DEFAULT_AGENT_ID = "molly";
 
 export const AGENT_WORKFLOW = [
   { id: "molly", name: "Molly\u2122", role: "Audience Intelligence", available: true },
   { id: "brandy", name: "Brandy\u2122", role: "Brand Voice", available: true },
   { id: "sacha", name: "Sacha\u2122", role: "Strategy Director", available: true },
-  { id: "escouade", name: "Escouade\u2122", role: "AI Production Team", available: false },
+  { id: "escouade", name: "Escouade\u2122", role: "AI Production Team", available: true },
   { id: "uply", name: "Uply\u2122", role: "Publishing Assistant", available: false },
 ];

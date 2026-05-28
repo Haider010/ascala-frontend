@@ -1,10 +1,11 @@
 import React from "react";
-import { CheckCircle2, CircleAlert, X } from "lucide-react";
+import { CheckCircle2, CircleAlert, FlaskConical, X } from "lucide-react";
 import { sendToAgent } from "./services/agents";
 import { useAgentConsole } from "./hooks/useAgentConsole";
 import { Sidebar } from "./components/layout/Sidebar";
 import { MessageBubble } from "./components/chat/MessageBubble";
 import { Composer } from "./components/chat/Composer";
+import { EscouadeWorkspace } from "./features/escouade/EscouadeWorkspace";
 import { GhlSessionScreen } from "./features/ghl/GhlSessionScreen";
 import { LoginScreen } from "./features/auth/LoginScreen";
 
@@ -14,12 +15,15 @@ export function App() {
     activeConversation,
     draft,
     error,
+    devUnlockAll,
+    effectiveWorkflowStatus,
     ghlSession,
     isAuthenticated,
     isEmbedded,
     isConversationLoading,
     pendingAgentId,
     setActiveAgent,
+    setDevUnlockAll,
     setDraft,
     setError,
     setPendingAgentId,
@@ -31,6 +35,7 @@ export function App() {
   } = useAgentConsole();
   const scrollRef = React.useRef(null);
   const [completionNotice, setCompletionNotice] = React.useState(null);
+  const isEscouade = activeAgent.id === "escouade";
   const isPending = pendingAgentId === activeAgent.id;
   const isComposerDisabled = isConversationLoading || !ghlSession.data?.sessionToken;
 
@@ -188,7 +193,7 @@ export function App() {
     <main className="ascala-workspace" style={{ "--agent-accent": activeAgent.accent }}>
       <Sidebar
         activeAgent={activeAgent}
-        workflowStatus={workflowStatus}
+        workflowStatus={effectiveWorkflowStatus}
         showLogout={!isEmbedded}
         onSelectAgent={setActiveAgent}
         onLogout={handleLogout}
@@ -219,10 +224,30 @@ export function App() {
           <div className="title-lockup">
             <h1>{activeAgent.name}</h1>
           </div>
+          {!isEmbedded && (
+            <label className={`dev-unlock-toggle ${devUnlockAll ? "is-on" : ""}`}>
+              <input
+                type="checkbox"
+                checked={devUnlockAll}
+                onChange={(event) => setDevUnlockAll(event.target.checked)}
+              />
+              <span className="dev-unlock-switch" aria-hidden="true" />
+              <span className="dev-unlock-copy">
+                <FlaskConical size={15} />
+                Unlock all
+              </span>
+            </label>
+          )}
         </header>
 
         <div className="studio-layout">
           <div className="main-column">
+            {isEscouade ? (
+              <EscouadeWorkspace
+                appSessionToken={ghlSession.data?.sessionToken}
+                onWorkflowStatus={applyWorkflowStatus}
+              />
+            ) : (
             <section className="command-card">
               <div className="chat-console" ref={scrollRef} aria-live="polite">
                 {isConversationLoading ? (
@@ -266,6 +291,7 @@ export function App() {
 
               <div className="mountain-line" aria-hidden="true" />
             </section>
+            )}
           </div>
         </div>
       </section>

@@ -1,5 +1,5 @@
 import { Brain, Check, CircleDot, Lock, LogOut, Mic, SendHorizontal, Sparkles, Target, Users } from "lucide-react";
-import { AGENTS, AGENT_WORKFLOW } from "../../config/agents";
+import { AGENT_WORKFLOW, WORKSPACES } from "../../config/agents";
 import { LogoMark } from "../shared/LogoMark";
 
 const ICONS = {
@@ -29,14 +29,15 @@ export function Sidebar({ activeAgent, workflowStatus, showLogout = true, onSele
       <nav className="side-nav">
         {steps.map((item, index) => {
           const Icon = ICONS[item.id] || Sparkles;
-          const isAgent = item.id in AGENTS;
-          const isActive = isAgent && item.id === activeAgent.id;
+          const isWorkspace = item.id in WORKSPACES;
+          const isActive = isWorkspace && item.id === activeAgent.id;
           const isCompleted = item.completed || item.status === "completed";
           const isCurrent = item.status === "current";
           const isLocked = item.locked || !item.available;
-          const canOpen = isAgent && item.available && !item.locked;
-          const StatusIcon = isCompleted ? Check : isCurrent ? CircleDot : Lock;
-          const stateLabel = isCompleted ? "Done" : isCurrent && item.available ? "Current" : isCurrent ? "Next" : "Locked";
+          const canOpen = isWorkspace && item.available && !item.locked;
+          const isUnlocked = canOpen && !isCompleted && !isCurrent;
+          const StatusIcon = isCompleted ? Check : isCurrent || isUnlocked ? CircleDot : Lock;
+          const stateLabel = isCompleted ? "Done" : isCurrent && item.available ? "Current" : isUnlocked ? "Available" : isCurrent ? "Next" : "Locked";
 
           return (
             <button
