@@ -1,5 +1,5 @@
 import React from "react";
-import { CircleAlert } from "lucide-react";
+import { CheckCircle2, CircleAlert, X } from "lucide-react";
 import { sendToAgent } from "./services/agents";
 import { useAgentConsole } from "./hooks/useAgentConsole";
 import { Sidebar } from "./components/layout/Sidebar";
@@ -30,8 +30,46 @@ export function App() {
     handleLogout,
   } = useAgentConsole();
   const scrollRef = React.useRef(null);
+  const [completionNotice, setCompletionNotice] = React.useState(null);
   const isPending = pendingAgentId === activeAgent.id;
   const isComposerDisabled = isConversationLoading || !ghlSession.data?.sessionToken;
+
+  function getStep(status, agentId) {
+    return status?.steps?.find((step) => step.id === agentId);
+  }
+
+  function getAgentCompletionNotice(agentId, previousStatus, nextStatus) {
+    const previousStep = getStep(previousStatus, agentId);
+    const nextStep = getStep(nextStatus, agentId);
+
+    if (!nextStep?.completed || previousStep?.completed) return null;
+
+    const unlockedStep = nextStatus?.steps?.find(
+      (step) => step.status === "current" && step.available && !step.locked,
+    );
+
+    if (!unlockedStep) return null;
+
+    const copy = {
+      molly: {
+        title: "Strategic foundation saved",
+        description: `${unlockedStep.name} is now accessible with the context needed to shape the next layer.`,
+      },
+      brandy: {
+        title: "Brand voice saved",
+        description: `${unlockedStep.name} is now accessible with the brand context needed to continue.`,
+      },
+      sacha: {
+        title: "Strategy plan saved",
+        description: `${unlockedStep.name} is now accessible with the strategy context needed for production.`,
+      },
+    };
+
+    return copy[agentId] || {
+      title: "Output saved",
+      description: `${unlockedStep.name} is now accessible with the context needed to continue.`,
+    };
+  }
 
   React.useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -93,6 +131,13 @@ export function App() {
           },
         ],
       }));
+      const notice = getAgentCompletionNotice(agent.id, workflowStatus, nextWorkflowStatus);
+      if (notice) {
+        setCompletionNotice({
+          ...notice,
+          id: `${agent.id}-${Date.now()}`,
+        });
+      }
       applyWorkflowStatus(nextWorkflowStatus);
     } catch (requestError) {
       const description =
@@ -150,6 +195,26 @@ export function App() {
       />
 
       <section className="studio">
+        {completionNotice && (
+          <div className="completion-toast" role="status" aria-live="polite">
+            <div className="completion-toast-icon" aria-hidden="true">
+              <CheckCircle2 size={19} />
+            </div>
+            <div className="completion-toast-copy">
+              <strong>{completionNotice.title}</strong>
+              <span>{completionNotice.description}</span>
+            </div>
+            <button
+              className="completion-toast-close"
+              type="button"
+              aria-label="Dismiss notification"
+              onClick={() => setCompletionNotice(null)}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         <header className="studio-topbar">
           <div className="title-lockup">
             <h1>{activeAgent.name}</h1>

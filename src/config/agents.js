@@ -27,6 +27,20 @@ export const AGENTS = {
     welcome:
       "Brandy\u2122 is online. Send the offer, audience, or campaign context and I will shape the brand direction.",
   },
+  sacha: {
+    id: "sacha",
+    name: "Sacha\u2122",
+    role: "Strategy Director",
+    endpoint:
+      "https://primary-production-b3410.up.railway.app/webhook/337039eb-d240-4139-965f-75ef3a625b3b/chat",
+    accent: "#c084fc",
+    accentSoft: "#6b21a8",
+    mode: "Strategy Director",
+    specialty: "Campaign strategy, direction, execution planning",
+    prompt: "Ask Sacha to turn approved strategy and brand voice into a clear execution direction.",
+    welcome:
+      "Sacha\u2122 is online. Once Molly and Brandy have locked the foundation, I will shape the strategic direction for execution.",
+  },
 };
 
 export const DEFAULT_AGENT_ID = "molly";
@@ -34,7 +48,7 @@ export const DEFAULT_AGENT_ID = "molly";
 export const AGENT_WORKFLOW = [
   { id: "molly", name: "Molly\u2122", role: "Audience Intelligence", available: true },
   { id: "brandy", name: "Brandy\u2122", role: "Brand Voice", available: true },
-  { id: "sacha", name: "Sacha\u2122", role: "Strategy Director", available: false },
+  { id: "sacha", name: "Sacha\u2122", role: "Strategy Director", available: true },
   { id: "escouade", name: "Escouade\u2122", role: "AI Production Team", available: false },
   { id: "uply", name: "Uply\u2122", role: "Publishing Assistant", available: false },
 ];

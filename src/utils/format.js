@@ -9,10 +9,25 @@ export function formatTime(value) {
   }
 }
 
+export function stripAscalaMarkers(value) {
+  if (typeof value !== "string") return value;
+
+  return value
+    .replace(
+      /<!--\s*ASCALA_OUTPUT_START\b.*?-->\s*([\s\S]*?)\s*<!--\s*ASCALA_OUTPUT_END\s*-->/gi,
+      "$1",
+    )
+    .replace(
+      /<!--\s*ASCALA_PATCH_START\b.*?-->\s*([\s\S]*?)\s*<!--\s*ASCALA_PATCH_END\s*-->/gi,
+      "$1",
+    )
+    .replace(/<!--\s*ASCALA_(?:OUTPUT|PATCH)_(?:START|END)\b.*?-->\s*/gi, "")
+    .trim();
+}
 
 export function getResponseText(payload) {
   if (payload == null) return "";
-  if (typeof payload === "string") return payload;
+  if (typeof payload === "string") return stripAscalaMarkers(payload);
 
   if (Array.isArray(payload)) {
     const best = payload

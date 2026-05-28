@@ -1,6 +1,7 @@
 import { CircleAlert, Sparkles, UserRound } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { stripAscalaMarkers } from "../../utils/format";
 
 function MessageMarkdown({ content }) {
   return (
@@ -15,7 +16,7 @@ function MessageMarkdown({ content }) {
           ),
         }}
       >
-        {content}
+        {stripAscalaMarkers(content)}
       </ReactMarkdown>
     </div>
   );
