@@ -1,6 +1,6 @@
 import React from "react";
-import { CheckCircle2, CircleAlert, FlaskConical, X } from "lucide-react";
-import { sendToAgent } from "./services/agents";
+import { CheckCircle2, CircleAlert, Trash2, X } from "lucide-react";
+import { clearAccountOutputs, sendToAgent } from "./services/agents";
 import { useAgentConsole } from "./hooks/useAgentConsole";
 import { Sidebar } from "./components/layout/Sidebar";
 import { MessageBubble } from "./components/chat/MessageBubble";
@@ -8,6 +8,7 @@ import { Composer } from "./components/chat/Composer";
 import { EscouadeWorkspace } from "./features/escouade/EscouadeWorkspace";
 import { GhlSessionScreen } from "./features/ghl/GhlSessionScreen";
 import { LoginScreen } from "./features/auth/LoginScreen";
+import { UplyComingSoon } from "./features/uply/UplyComingSoon";
 
 export function App() {
   const {
@@ -15,15 +16,14 @@ export function App() {
     activeConversation,
     draft,
     error,
-    devUnlockAll,
     effectiveWorkflowStatus,
     ghlSession,
     isAuthenticated,
     isEmbedded,
     isConversationLoading,
     pendingAgentId,
+    resetConsole,
     setActiveAgent,
-    setDevUnlockAll,
     setDraft,
     setError,
     setPendingAgentId,
@@ -35,7 +35,11 @@ export function App() {
   } = useAgentConsole();
   const scrollRef = React.useRef(null);
   const [completionNotice, setCompletionNotice] = React.useState(null);
+  const [showClearConfirm, setShowClearConfirm] = React.useState(false);
+  const [isClearingOutputs, setIsClearingOutputs] = React.useState(false);
+  const [clearError, setClearError] = React.useState("");
   const isEscouade = activeAgent.id === "escouade";
+  const isUply = activeAgent.id === "uply";
   const isPending = pendingAgentId === activeAgent.id;
   const isComposerDisabled = isConversationLoading || !ghlSession.data?.sessionToken;
 
@@ -181,6 +185,27 @@ export function App() {
     }
   }
 
+  async function handleClearAll() {
+    if (!ghlSession.data?.sessionToken || isClearingOutputs) return;
+
+    setIsClearingOutputs(true);
+    setClearError("");
+    setError("");
+    try {
+      const result = await clearAccountOutputs({
+        appSessionToken: ghlSession.data.sessionToken,
+      });
+      resetConsole(result.workflowStatus);
+      setCompletionNotice(null);
+      setShowClearConfirm(false);
+    } catch (clearError) {
+      setClearError(clearError.message || "Unable to clear account outputs.");
+      setError(clearError.message || "Unable to clear account outputs.");
+    } finally {
+      setIsClearingOutputs(false);
+    }
+  }
+
   if (isEmbedded && !isAuthenticated) {
     return <GhlSessionScreen status={ghlSession.status} error={ghlSession.error} />;
   }
@@ -224,20 +249,18 @@ export function App() {
           <div className="title-lockup">
             <h1>{activeAgent.name}</h1>
           </div>
-          {!isEmbedded && (
-            <label className={`dev-unlock-toggle ${devUnlockAll ? "is-on" : ""}`}>
-              <input
-                type="checkbox"
-                checked={devUnlockAll}
-                onChange={(event) => setDevUnlockAll(event.target.checked)}
-              />
-              <span className="dev-unlock-switch" aria-hidden="true" />
-              <span className="dev-unlock-copy">
-                <FlaskConical size={15} />
-                Unlock all
-              </span>
-            </label>
-          )}
+          <button
+            className="clear-all-button"
+            type="button"
+            disabled={!ghlSession.data?.sessionToken || isClearingOutputs}
+            onClick={() => {
+              setClearError("");
+              setShowClearConfirm(true);
+            }}
+          >
+            <Trash2 size={15} />
+            Clear all
+          </button>
         </header>
 
         <div className="studio-layout">
@@ -247,6 +270,8 @@ export function App() {
                 appSessionToken={ghlSession.data?.sessionToken}
                 onWorkflowStatus={applyWorkflowStatus}
               />
+            ) : isUply ? (
+              <UplyComingSoon />
             ) : (
             <section className="command-card">
               <div className="chat-console" ref={scrollRef} aria-live="polite">
@@ -295,6 +320,57 @@ export function App() {
           </div>
         </div>
       </section>
+
+      {showClearConfirm && (
+        <div className="modal-backdrop" role="presentation">
+          <section className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="clear-all-title">
+            <button
+              className="confirm-modal-close"
+              type="button"
+              aria-label="Cancel clear all"
+              onClick={() => {
+                setClearError("");
+                setShowClearConfirm(false);
+              }}
+              disabled={isClearingOutputs}
+            >
+              <X size={16} />
+            </button>
+            <div className="confirm-modal-icon" aria-hidden="true">
+              <Trash2 size={21} />
+            </div>
+            <div className="confirm-modal-copy">
+              <h2 id="clear-all-title">Clear all agent outputs?</h2>
+              <p>
+                This will remove saved Molly, Brandy, Sacha, and Escouade outputs for this account,
+                clear the stored chat history, lock the workflow again, and return you to Molly.
+              </p>
+            </div>
+            {clearError && <div className="confirm-modal-error" role="alert">{clearError}</div>}
+            <div className="confirm-modal-actions">
+              <button
+                className="ghost-confirm-button"
+                type="button"
+                onClick={() => {
+                  setClearError("");
+                  setShowClearConfirm(false);
+                }}
+                disabled={isClearingOutputs}
+              >
+                Cancel
+              </button>
+              <button
+                className="danger-confirm-button"
+                type="button"
+                onClick={handleClearAll}
+                disabled={isClearingOutputs}
+              >
+                {isClearingOutputs ? "Clearing..." : "Yes, clear all"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }

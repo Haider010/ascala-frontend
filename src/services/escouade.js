@@ -23,6 +23,17 @@ async function requestEscouade(path, { method = "GET", body, appSessionToken }) 
   return payload;
 }
 
+function parseWorkflowStatusHeader(response) {
+  const workflowStatusHeader = response.headers.get("X-Workflow-Status");
+  if (!workflowStatusHeader) return null;
+
+  try {
+    return JSON.parse(workflowStatusHeader);
+  } catch {
+    return null;
+  }
+}
+
 export function generateEscouadeBatch({ appSessionToken, memberType, batchName, sourceType, sourceLabel, filters, message }) {
   return requestEscouade("/escouade/batch/generate", {
     method: "POST",
@@ -97,6 +108,7 @@ export async function exportEscouadeCsv({ appSessionToken, batchId }) {
 
   const blob = await response.blob();
   const disposition = response.headers.get("Content-Disposition") || "";
+  const workflowStatus = parseWorkflowStatusHeader(response);
   const filename = disposition.match(/filename="([^"]+)"/)?.[1] || "escouade-export.csv";
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -104,4 +116,6 @@ export async function exportEscouadeCsv({ appSessionToken, batchId }) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+
+  return { filename, workflowStatus };
 }

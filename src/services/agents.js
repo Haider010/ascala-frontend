@@ -50,3 +50,25 @@ export async function sendToAgent({ agent, message, sessionId, signal, appSessio
     workflowStatus: payload.workflowStatus || null,
   };
 }
+
+
+export async function clearAccountOutputs({ appSessionToken }) {
+  if (!appSessionToken) {
+    throw new Error("Backend account session is not ready yet.");
+  }
+
+  const response = await fetch(getApiUrl("/account/clear-outputs"), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${appSessionToken}`,
+    },
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(getResponseText(payload.detail) || payload.detail || "Unable to clear account outputs.");
+  }
+
+  return payload;
+}

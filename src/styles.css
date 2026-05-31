@@ -432,76 +432,155 @@ textarea {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.dev-unlock-toggle {
+.clear-all-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 38px;
   padding: 0 12px;
-  gap: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  gap: 8px;
+  border: 1px solid rgba(255, 92, 138, 0.28);
   border-radius: 999px;
-  color: rgba(255, 255, 255, 0.72);
-  background: rgba(255, 255, 255, 0.035);
+  color: #ffd9e4;
+  background: rgba(255, 92, 138, 0.08);
   font-size: 0.78rem;
   font-weight: 750;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  user-select: none;
-}
-
-.dev-unlock-toggle input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.dev-unlock-switch {
-  position: relative;
-  width: 36px;
-  height: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.34);
-}
-
-.dev-unlock-switch::after {
-  position: absolute;
-  content: "";
-  top: 3px;
-  left: 3px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.68);
   transition:
-    transform 160ms ease,
+    border-color 160ms ease,
     background 160ms ease,
     box-shadow 160ms ease;
 }
 
-.dev-unlock-copy {
+.clear-all-button:hover:not(:disabled) {
+  border-color: rgba(255, 92, 138, 0.62);
+  background: rgba(255, 92, 138, 0.13);
+  box-shadow: 0 0 22px rgba(255, 92, 138, 0.12);
+}
+
+.clear-all-button:disabled {
+  opacity: 0.48;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(12px);
+}
+
+.confirm-modal {
+  position: relative;
+  display: grid;
+  width: min(100%, 460px);
+  padding: 24px;
+  gap: 16px;
+  border: 1px solid rgba(255, 92, 138, 0.28);
+  border-radius: 16px;
+  color: var(--text);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.016)),
+    rgba(7, 8, 13, 0.96);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.48),
+    0 0 42px rgba(255, 92, 138, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.confirm-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.confirm-modal-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 92, 138, 0.38);
+  border-radius: 50%;
+  color: #ffd9e4;
+  background: rgba(255, 92, 138, 0.1);
+  box-shadow: 0 0 22px rgba(255, 92, 138, 0.12);
+}
+
+.confirm-modal-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.confirm-modal-copy h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.18rem;
+  font-weight: 760;
+  letter-spacing: 0;
+}
+
+.confirm-modal-copy p {
+  margin: 0;
+  color: rgba(247, 244, 255, 0.72);
+  line-height: 1.55;
+}
+
+.confirm-modal-error {
+  padding: 10px 11px;
+  border: 1px solid rgba(255, 92, 138, 0.34);
+  border-radius: 10px;
+  color: #ffd9e4;
+  background: rgba(255, 92, 138, 0.1);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.ghost-confirm-button,
+.danger-confirm-button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  white-space: nowrap;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 15px;
+  border-radius: 11px;
+  color: var(--text);
+  font-weight: 750;
 }
 
-.dev-unlock-toggle.is-on {
-  border-color: rgba(168, 85, 255, 0.54);
-  color: #fff;
-  background: rgba(168, 85, 255, 0.12);
-  box-shadow: 0 0 22px rgba(168, 85, 255, 0.16);
+.ghost-confirm-button {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.045);
 }
 
-.dev-unlock-toggle.is-on .dev-unlock-switch {
-  border-color: rgba(168, 85, 255, 0.56);
-  background: rgba(168, 85, 255, 0.24);
+.danger-confirm-button {
+  border: 1px solid rgba(255, 92, 138, 0.48);
+  background:
+    linear-gradient(135deg, rgba(164, 32, 72, 0.82), rgba(74, 14, 32, 0.72)),
+    rgba(255, 92, 138, 0.1);
 }
 
-.dev-unlock-toggle.is-on .dev-unlock-switch::after {
-  transform: translateX(16px);
-  background: #fff;
-  box-shadow: 0 0 12px rgba(168, 85, 255, 0.86);
+.ghost-confirm-button:disabled,
+.danger-confirm-button:disabled,
+.confirm-modal-close:disabled {
+  opacity: 0.5;
 }
 
 .title-lockup {
@@ -598,6 +677,52 @@ textarea {
   height: 120px;
   background: radial-gradient(ellipse at center bottom, rgba(168, 85, 255, 0.16), transparent 60%);
   pointer-events: none;
+}
+
+.uply-coming-soon {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  min-height: 0;
+  height: 100%;
+  padding: clamp(24px, 5vw, 56px);
+  gap: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 50% 36%, rgba(168, 85, 255, 0.14), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+    rgba(5, 6, 10, 0.78);
+  text-align: center;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(22px);
+}
+
+.uply-coming-soon-icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border: 1px solid rgba(201, 126, 255, 0.36);
+  border-radius: 15px;
+  color: #f0d7ff;
+  background: rgba(168, 85, 255, 0.14);
+}
+
+.uply-coming-soon-copy {
+  display: grid;
+  gap: 8px;
+  max-width: 460px;
+}
+
+.uply-coming-soon-copy strong {
+  color: #fff;
+  font-size: clamp(1.25rem, 2vw, 1.7rem);
+}
+
+.uply-coming-soon-copy span {
+  color: var(--muted);
+  line-height: 1.55;
 }
 
 .login-form label {

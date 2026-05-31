@@ -57,6 +57,18 @@ export const WORKSPACES = {
     welcome: "Escouade\u2122 is ready to turn approved strategy into production-ready content batches.",
     kind: "production",
   },
+  uply: {
+    id: "uply",
+    name: "Uply\u2122",
+    role: "Publishing Assistant",
+    accent: "#e9d5ff",
+    accentSoft: "#9333ea",
+    mode: "Publishing Assistant",
+    specialty: "Publishing workflow and distribution",
+    prompt: "Prepare approved content for publishing.",
+    welcome: "Uply\u2122 is coming soon.",
+    kind: "coming-soon",
+  },
 };
 
 export const DEFAULT_AGENT_ID = "molly";
@@ -66,5 +78,5 @@ export const AGENT_WORKFLOW = [
   { id: "brandy", name: "Brandy\u2122", role: "Brand Voice", available: true },
   { id: "sacha", name: "Sacha\u2122", role: "Strategy Director", available: true },
   { id: "escouade", name: "Escouade\u2122", role: "AI Production Team", available: true },
-  { id: "uply", name: "Uply\u2122", role: "Publishing Assistant", available: false },
+  { id: "uply", name: "Uply\u2122", role: "Publishing Assistant", available: true },
 ];

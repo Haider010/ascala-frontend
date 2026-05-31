@@ -157,6 +157,10 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
     setStatus(response.message || "");
   }
 
+  function applyExportWorkflowStatus(response) {
+    if (response?.workflowStatus) onWorkflowStatus(response.workflowStatus, true);
+  }
+
   async function runAction(actionName, task) {
     setPendingAction(actionName);
     setError("");
@@ -211,8 +215,9 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
 
     await runAction("instruction", async () => {
       if (wantsExport) {
-        await exportEscouadeCsv({ appSessionToken, batchId: batch.id });
+        const response = await exportEscouadeCsv({ appSessionToken, batchId: batch.id });
         markApprovedItemsExported();
+        applyExportWorkflowStatus(response);
         setCommand("");
         setStatus("Approved items exported as CSV.");
         return;
@@ -349,12 +354,13 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
                   Reopen
                 </button>
                 <button type="button" disabled={!approvedCount || Boolean(pendingAction)} onClick={() => runAction("export", async () => {
-                  await exportEscouadeCsv({ appSessionToken, batchId: batch.id });
+                  const response = await exportEscouadeCsv({ appSessionToken, batchId: batch.id });
                   markApprovedItemsExported();
+                  applyExportWorkflowStatus(response);
                   setStatus("Approved items exported as CSV.");
                 })}>
-                  <Download size={16} />
-                  Export CSV
+                  {pendingAction === "export" ? <Loader2 className="spin" size={16} /> : <Download size={16} />}
+                  {pendingAction === "export" ? "Exporting..." : "Export CSV"}
                 </button>
               </div>
             </div>
