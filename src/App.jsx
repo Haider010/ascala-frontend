@@ -8,7 +8,7 @@ import { Composer } from "./components/chat/Composer";
 import { EscouadeWorkspace } from "./features/escouade/EscouadeWorkspace";
 import { GhlSessionScreen } from "./features/ghl/GhlSessionScreen";
 import { LoginScreen } from "./features/auth/LoginScreen";
-import { UplyComingSoon } from "./features/uply/UplyComingSoon";
+import { UplyWorkspace } from "./features/uply/UplyWorkspace";
 
 export function App() {
   const {
@@ -271,7 +271,7 @@ export function App() {
                 onWorkflowStatus={applyWorkflowStatus}
               />
             ) : isUply ? (
-              <UplyComingSoon />
+              <UplyWorkspace appSessionToken={ghlSession.data?.sessionToken} />
             ) : (
             <section className="command-card">
               <div className="chat-console" ref={scrollRef} aria-live="polite">
