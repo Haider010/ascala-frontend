@@ -42,9 +42,11 @@ function TokenSummaryCard({ title, subtitle, totals, icon: Icon }) {
         </div>
       </div>
       <div className="usage-metric-grid">
-        <TokenMetric label="Input" value={totals?.inputTokens} />
+        <TokenMetric label="Fresh input" value={totals?.freshInputTokens} tone="accent" />
+        <TokenMetric label="Cached input" value={totals?.cachedInputTokens} />
+        <TokenMetric label="Input total" value={totals?.inputTokens} />
         <TokenMetric label="Output" value={totals?.outputTokens} />
-        <TokenMetric label="Total" value={totals?.totalTokens} tone="accent" />
+        <TokenMetric label="Grand total" value={totals?.totalTokens} />
         <TokenMetric label="Calls" value={totals?.callCount} />
       </div>
     </section>
@@ -141,9 +143,11 @@ export function TokenUsageWorkspace({ appSessionToken }) {
                 <thead>
                   <tr>
                     <th>Month</th>
-                    <th>Input</th>
+                    <th>Fresh input</th>
+                    <th>Cached input</th>
+                    <th>Input total</th>
                     <th>Output</th>
-                    <th>Total</th>
+                    <th>Grand total</th>
                     <th>Calls</th>
                   </tr>
                 </thead>
@@ -152,6 +156,8 @@ export function TokenUsageWorkspace({ appSessionToken }) {
                     months.map((month) => (
                       <tr key={month.month}>
                         <td>{formatMonth(month.month)}</td>
+                        <td>{formatNumber(month.freshInputTokens)}</td>
+                        <td>{formatNumber(month.cachedInputTokens)}</td>
                         <td>{formatNumber(month.inputTokens)}</td>
                         <td>{formatNumber(month.outputTokens)}</td>
                         <td>{formatNumber(month.totalTokens)}</td>
@@ -160,7 +166,7 @@ export function TokenUsageWorkspace({ appSessionToken }) {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="5">No token usage has been recorded yet.</td>
+                      <td colSpan="7">No token usage has been recorded yet.</td>
                     </tr>
                   )}
                 </tbody>
@@ -180,9 +186,11 @@ export function TokenUsageWorkspace({ appSessionToken }) {
                     <th>Agent</th>
                     <th>Month</th>
                     <th>Model</th>
-                    <th>Input</th>
+                    <th>Fresh input</th>
+                    <th>Cached input</th>
+                    <th>Input total</th>
                     <th>Output</th>
-                    <th>Total</th>
+                    <th>Grand total</th>
                     <th>Calls</th>
                   </tr>
                 </thead>
@@ -193,6 +201,8 @@ export function TokenUsageWorkspace({ appSessionToken }) {
                         <td>{AGENT_LABELS[agent.agentId] || agent.agentId}</td>
                         <td>{formatMonth(agent.month)}</td>
                         <td>{agent.model || "Unknown"}</td>
+                        <td>{formatNumber(agent.freshInputTokens)}</td>
+                        <td>{formatNumber(agent.cachedInputTokens)}</td>
                         <td>{formatNumber(agent.inputTokens)}</td>
                         <td>{formatNumber(agent.outputTokens)}</td>
                         <td>{formatNumber(agent.totalTokens)}</td>
@@ -201,7 +211,7 @@ export function TokenUsageWorkspace({ appSessionToken }) {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7">No agent usage has been recorded yet.</td>
+                      <td colSpan="9">No agent usage has been recorded yet.</td>
                     </tr>
                   )}
                 </tbody>

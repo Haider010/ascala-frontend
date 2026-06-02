@@ -2012,7 +2012,7 @@ textarea {
 
 .usage-metric-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 9px;
 }
 
@@ -2076,7 +2076,7 @@ textarea {
 
 .usage-table {
   width: 100%;
-  min-width: 680px;
+  min-width: 860px;
   border-collapse: collapse;
   font-size: 0.82rem;
 }
