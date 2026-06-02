@@ -9,6 +9,7 @@ import { EscouadeWorkspace } from "./features/escouade/EscouadeWorkspace";
 import { GhlSessionScreen } from "./features/ghl/GhlSessionScreen";
 import { LoginScreen } from "./features/auth/LoginScreen";
 import { UplyWorkspace } from "./features/uply/UplyWorkspace";
+import { TokenUsageWorkspace } from "./features/usage/TokenUsageWorkspace";
 
 export function App() {
   const {
@@ -40,6 +41,7 @@ export function App() {
   const [clearError, setClearError] = React.useState("");
   const isEscouade = activeAgent.id === "escouade";
   const isUply = activeAgent.id === "uply";
+  const isUsage = activeAgent.id === "usage";
   const isPending = pendingAgentId === activeAgent.id;
   const isComposerDisabled = isConversationLoading || !ghlSession.data?.sessionToken;
 
@@ -272,6 +274,8 @@ export function App() {
               />
             ) : isUply ? (
               <UplyWorkspace appSessionToken={ghlSession.data?.sessionToken} />
+            ) : isUsage ? (
+              <TokenUsageWorkspace appSessionToken={ghlSession.data?.sessionToken} />
             ) : (
             <section className="command-card">
               <div className="chat-console" ref={scrollRef} aria-live="polite">

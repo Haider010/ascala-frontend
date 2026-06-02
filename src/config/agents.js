@@ -69,6 +69,18 @@ export const WORKSPACES = {
     welcome: "Uply\u2122 is coming soon.",
     kind: "coming-soon",
   },
+  usage: {
+    id: "usage",
+    name: "Usage",
+    role: "Token Analytics",
+    accent: "#a78bfa",
+    accentSoft: "#6d28d9",
+    mode: "Token Analytics",
+    specialty: "Monthly input and output token tracking",
+    prompt: "Review token consumption.",
+    welcome: "Token usage is ready.",
+    kind: "utility",
+  },
 };
 
 export const DEFAULT_AGENT_ID = "molly";

@@ -1,4 +1,4 @@
-import { Brain, Check, CircleDot, Lock, LogOut, Mic, SendHorizontal, Sparkles, Target, Users } from "lucide-react";
+import { BarChart3, Brain, Check, CircleDot, Lock, LogOut, Mic, SendHorizontal, Sparkles, Target, Users } from "lucide-react";
 import { AGENT_WORKFLOW, WORKSPACES } from "../../config/agents";
 import { LogoMark } from "../shared/LogoMark";
 
@@ -8,6 +8,7 @@ const ICONS = {
   sacha: Target,
   escouade: Users,
   uply: SendHorizontal,
+  usage: BarChart3,
 };
 
 export function Sidebar({ activeAgent, workflowStatus, showLogout = true, onSelectAgent, onLogout }) {
@@ -71,6 +72,27 @@ export function Sidebar({ activeAgent, workflowStatus, showLogout = true, onSele
           );
         })}
       </nav>
+
+      <div className="utility-nav" aria-label="Account tools">
+        <button
+          className={["nav-item", "utility-nav-item", activeAgent.id === "usage" ? "is-active" : ""].filter(Boolean).join(" ")}
+          type="button"
+          aria-current={activeAgent.id === "usage" ? "page" : undefined}
+          onClick={() => onSelectAgent("usage")}
+        >
+          <span className="nav-step-index">--</span>
+          <span className="nav-agent-icon">
+            <BarChart3 size={19} />
+          </span>
+          <span className="nav-copy">
+            <strong>Usage</strong>
+            <small>Token Analytics</small>
+          </span>
+          <span className="nav-state" title="Available">
+            <CircleDot size={15} />
+          </span>
+        </button>
+      </div>
 
       {showLogout && (
         <button className="logout-button" type="button" onClick={onLogout}>

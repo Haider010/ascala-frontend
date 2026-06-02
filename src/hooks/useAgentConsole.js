@@ -227,6 +227,14 @@ export function useAgentConsole() {
   }
 
   function setActiveAgent(agentId) {
+    const workspace = WORKSPACES[agentId];
+    if (workspace?.kind === "utility") {
+      setState((current) => ({ ...current, activeAgentId: agentId }));
+      setDraft("");
+      setError("");
+      return;
+    }
+
     const step = effectiveWorkflowStatus.steps.find((item) => item.id === agentId);
     if (!step || step.locked || !step.available || !(agentId in WORKSPACES)) return;
 
