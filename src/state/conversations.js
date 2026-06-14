@@ -1,4 +1,4 @@
-import { AGENTS, DEFAULT_AGENT_ID } from "../config/agents";
+import { AGENTS, DEFAULT_AGENT_ID, WORKSPACES } from "../config/agents";
 import { createSessionId } from "../utils/session";
 
 export function createInitialState() {
@@ -33,7 +33,7 @@ export function loadState(storageKey) {
     const fresh = createInitialState();
 
     return {
-      activeAgentId: saved.activeAgentId in AGENTS ? saved.activeAgentId : DEFAULT_AGENT_ID,
+      activeAgentId: saved.activeAgentId in WORKSPACES ? saved.activeAgentId : DEFAULT_AGENT_ID,
       conversations: Object.fromEntries(
         Object.values(AGENTS).map((agent) => [
           agent.id,

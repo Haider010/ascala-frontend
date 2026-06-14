@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, CircleAlert, Trash2, X } from "lucide-react";
+import { Check, CheckCircle2, ChevronRight, CircleAlert, CircleDot, Lock, Trash2, X } from "lucide-react";
 import { clearAccountOutputs, sendToAgent } from "./services/agents";
 import { useAgentConsole } from "./hooks/useAgentConsole";
 import { Sidebar } from "./components/layout/Sidebar";
@@ -7,9 +7,77 @@ import { MessageBubble } from "./components/chat/MessageBubble";
 import { Composer } from "./components/chat/Composer";
 import { EscouadeWorkspace } from "./features/escouade/EscouadeWorkspace";
 import { GhlSessionScreen } from "./features/ghl/GhlSessionScreen";
+import { LandingPage } from "./features/landing/LandingPage";
 import { LoginScreen } from "./features/auth/LoginScreen";
 import { UplyWorkspace } from "./features/uply/UplyWorkspace";
 import { TokenUsageWorkspace } from "./features/usage/TokenUsageWorkspace";
+
+function AgentFlowRail({ activeAgent, workflowStatus, onSelectAgent }) {
+  const steps = workflowStatus?.steps || [];
+  if (!steps.length) return null;
+
+  const stepInfo = {
+    molly: "Builds the audience foundation: ICA, positioning, buyer psychology, and messaging angles.",
+    brandy: "Defines the brand voice system: tone, language rules, guardrails, and downstream voice engine.",
+    sacha: "Turns the foundation into a social strategy: themes, cadence, CTAs, campaigns, and planning direction.",
+    escouade: "Produces structured content batches from the approved strategy, then supports review, approval, and export.",
+    uply: "Prepares publishing workflows from approved exports. This step unlocks after Escouade content is exported.",
+  };
+
+  return (
+    <div className="agent-flow-rail" aria-label="Agent workflow">
+      <div className="agent-flow-track">
+        {steps.map((step, index) => {
+          const isActive = step.id === activeAgent.id;
+          const isComplete = step.completed || step.status === "completed";
+          const isCurrent = step.status === "current";
+          const isLocked = step.locked || !step.available;
+          const canOpen = step.available && !step.locked;
+          const StatusIcon = isComplete ? Check : isLocked ? Lock : CircleDot;
+          const stateLabel = isComplete ? "Completed" : isCurrent ? "Current" : isLocked ? "Locked" : "Available";
+
+          return (
+            <button
+              className={[
+                "agent-flow-step",
+                isActive ? "is-active" : "",
+                isComplete ? "is-complete" : "",
+                isCurrent ? "is-current" : "",
+                isLocked ? "is-locked" : "",
+              ].filter(Boolean).join(" ")}
+              key={step.id}
+              type="button"
+              disabled={!canOpen}
+              aria-current={isActive ? "step" : undefined}
+              aria-label={`${step.name}. ${stateLabel}. ${stepInfo[step.id] || step.role}`}
+              onClick={() => {
+                if (canOpen) onSelectAgent(step.id);
+              }}
+            >
+              <span className="agent-flow-index">{String(index + 1).padStart(2, "0")}</span>
+              <span className="agent-flow-copy">
+                <strong>{step.name}</strong>
+                <small>{stateLabel}</small>
+              </span>
+              <span className="agent-flow-state" aria-hidden="true">
+                <StatusIcon size={13} />
+              </span>
+              <span className="agent-flow-info" role="tooltip">
+                <strong>{step.role}</strong>
+                <span>{stepInfo[step.id] || "Part of the Ascala agent workflow."}</span>
+              </span>
+              {index < steps.length - 1 && (
+                <span className="agent-flow-arrow" aria-hidden="true">
+                  <ChevronRight size={16} />
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function App() {
   const {
@@ -19,12 +87,15 @@ export function App() {
     error,
     effectiveWorkflowStatus,
     ghlSession,
+    devUnlockAll,
     isAuthenticated,
     isEmbedded,
+    isLocalDev,
     isConversationLoading,
     pendingAgentId,
     resetConsole,
     setActiveAgent,
+    setDevUnlockAll,
     setDraft,
     setError,
     setPendingAgentId,
@@ -39,6 +110,7 @@ export function App() {
   const [showClearConfirm, setShowClearConfirm] = React.useState(false);
   const [isClearingOutputs, setIsClearingOutputs] = React.useState(false);
   const [clearError, setClearError] = React.useState("");
+  const [showLanding, setShowLanding] = React.useState(true);
   const isEscouade = activeAgent.id === "escouade";
   const isUply = activeAgent.id === "uply";
   const isUsage = activeAgent.id === "usage";
@@ -198,6 +270,7 @@ export function App() {
         appSessionToken: ghlSession.data.sessionToken,
       });
       resetConsole(result.workflowStatus);
+      setShowLanding(true);
       setCompletionNotice(null);
       setShowClearConfirm(false);
     } catch (clearError) {
@@ -216,6 +289,24 @@ export function App() {
     return <LoginScreen onLogin={handleLogin} />;
   }
 
+  function handleEnterWorkspace() {
+    const currentAgentId = effectiveWorkflowStatus?.currentAgentId;
+    if (currentAgentId) {
+      setActiveAgent(currentAgentId);
+    }
+    setShowLanding(false);
+  }
+
+  if (showLanding) {
+    return (
+      <LandingPage
+        workflowStatus={effectiveWorkflowStatus}
+        isSessionReady={Boolean(ghlSession.data?.sessionToken)}
+        onEnterWorkspace={handleEnterWorkspace}
+      />
+    );
+  }
+
   return (
     <main className="ascala-workspace" style={{ "--agent-accent": activeAgent.accent }}>
       <Sidebar
@@ -223,6 +314,7 @@ export function App() {
         workflowStatus={effectiveWorkflowStatus}
         showLogout={!isEmbedded}
         onSelectAgent={setActiveAgent}
+        onOpenLanding={() => setShowLanding(true)}
         onLogout={handleLogout}
       />
 
@@ -251,19 +343,40 @@ export function App() {
           <div className="title-lockup">
             <h1>{activeAgent.name}</h1>
           </div>
-          <button
-            className="clear-all-button"
-            type="button"
-            disabled={!ghlSession.data?.sessionToken || isClearingOutputs}
-            onClick={() => {
-              setClearError("");
-              setShowClearConfirm(true);
-            }}
-          >
-            <Trash2 size={15} />
-            Clear all
-          </button>
+          <div className="topbar-actions">
+            {isLocalDev && (
+              <label className="dev-unlock-toggle">
+                <input
+                  type="checkbox"
+                  checked={devUnlockAll}
+                  onChange={(event) => setDevUnlockAll(event.target.checked)}
+                />
+                <span className="dev-unlock-track" aria-hidden="true">
+                  <span />
+                </span>
+                <span className="dev-unlock-label">Unlock all</span>
+              </label>
+            )}
+            <button
+              className="clear-all-button"
+              type="button"
+              disabled={!ghlSession.data?.sessionToken || isClearingOutputs}
+              onClick={() => {
+                setClearError("");
+                setShowClearConfirm(true);
+              }}
+            >
+              <Trash2 size={15} />
+              Clear all
+            </button>
+          </div>
         </header>
+
+        <AgentFlowRail
+          activeAgent={activeAgent}
+          workflowStatus={effectiveWorkflowStatus}
+          onSelectAgent={setActiveAgent}
+        />
 
         <div className="studio-layout">
           <div className="main-column">
@@ -347,7 +460,7 @@ export function App() {
               <h2 id="clear-all-title">Clear all agent outputs?</h2>
               <p>
                 This will remove saved Molly, Brandy, Sacha, and Escouade outputs for this account,
-                clear the stored chat history, lock the workflow again, and return you to Molly.
+                clear the stored chat history, lock the workflow again, and return you to the intro page.
               </p>
             </div>
             {clearError && <div className="confirm-modal-error" role="alert">{clearError}</div>}

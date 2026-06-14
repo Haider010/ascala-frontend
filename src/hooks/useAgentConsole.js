@@ -8,6 +8,12 @@ import { createInitialState } from "../state/conversations";
 import { isEmbeddedInFrame } from "../utils/session";
 
 const EMPTY_CONVERSATION = { sessionId: null, messages: [] };
+const DEV_UNLOCK_STORAGE_KEY = "ascala-dev-unlock-all";
+
+function isLocalhost() {
+  if (typeof window === "undefined") return false;
+  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+}
 
 function mergeHistoriesIntoState(histories) {
   const fresh = createInitialState();
@@ -40,7 +46,26 @@ function createDefaultWorkflowStatus() {
   };
 }
 
+function createDevUnlockedWorkflowStatus(workflowStatus) {
+  const baseStatus = workflowStatus || createDefaultWorkflowStatus();
+  const steps = (baseStatus.steps?.length ? baseStatus.steps : AGENT_WORKFLOW).map((step) => ({
+    ...step,
+    available: true,
+    locked: false,
+    status: step.completed ? "completed" : step.status === "current" ? "current" : "available",
+  }));
+
+  return {
+    ...baseStatus,
+    currentAgentId: baseStatus.currentAgentId || "molly",
+    steps,
+  };
+}
+
 function getSelectableAgentId(workflowStatus, fallbackAgentId) {
+  const fallbackWorkspace = WORKSPACES[fallbackAgentId];
+  if (fallbackWorkspace?.kind === "utility") return fallbackAgentId;
+
   const currentAgentId = workflowStatus?.currentAgentId;
   if (currentAgentId in WORKSPACES) return currentAgentId;
 
@@ -77,6 +102,7 @@ async function getSessionHistories(session, signal) {
 
 export function useAgentConsole() {
   const [isEmbedded] = React.useState(isEmbeddedInFrame);
+  const [isLocalDev] = React.useState(isLocalhost);
   const [ghlSession, setGhlSession] = React.useState({
     status: isEmbeddedInFrame() ? "checking" : "idle",
     data: null,
@@ -90,9 +116,12 @@ export function useAgentConsole() {
   const [pendingAgentId, setPendingAgentId] = React.useState(null);
   const [error, setError] = React.useState("");
   const [workflowStatus, setWorkflowStatus] = React.useState(createDefaultWorkflowStatus);
+  const [devUnlockAll, setDevUnlockAllState] = React.useState(
+    () => isLocalhost() && localStorage.getItem(DEV_UNLOCK_STORAGE_KEY) === "true",
+  );
   const directSessionAttemptedRef = React.useRef(false);
 
-  const effectiveWorkflowStatus = workflowStatus;
+  const effectiveWorkflowStatus = isLocalDev && devUnlockAll ? createDevUnlockedWorkflowStatus(workflowStatus) : workflowStatus;
   const activeAgent = WORKSPACES[state.activeAgentId] || WORKSPACES.molly;
   const activeConversation = state.conversations[state.activeAgentId] || EMPTY_CONVERSATION;
   const isConversationLoading = isAuthenticated && ghlSession.status === "checking";
@@ -218,12 +247,30 @@ export function useAgentConsole() {
 
   function resetConsole(nextWorkflowStatus = createDefaultWorkflowStatus()) {
     localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem("ascala-dev-unlock-all");
+    localStorage.removeItem(DEV_UNLOCK_STORAGE_KEY);
     setState(createInitialState());
     setWorkflowStatus(nextWorkflowStatus || createDefaultWorkflowStatus());
+    setDevUnlockAllState(false);
     setDraft("");
     setError("");
     setPendingAgentId(null);
+  }
+
+  function setDevUnlockAll(nextValue) {
+    if (!isLocalDev) return;
+
+    const enabled = Boolean(nextValue);
+    setDevUnlockAllState(enabled);
+    if (enabled) {
+      localStorage.setItem(DEV_UNLOCK_STORAGE_KEY, "true");
+      return;
+    }
+
+    localStorage.removeItem(DEV_UNLOCK_STORAGE_KEY);
+    setState((current) => ({
+      ...current,
+      activeAgentId: getSelectableAgentId(workflowStatus, current.activeAgentId),
+    }));
   }
 
   function setActiveAgent(agentId) {
@@ -268,12 +315,15 @@ export function useAgentConsole() {
     error,
     effectiveWorkflowStatus,
     ghlSession,
+    devUnlockAll,
     isAuthenticated,
     isEmbedded,
+    isLocalDev,
     isConversationLoading,
     pendingAgentId,
     resetConsole,
     setActiveAgent,
+    setDevUnlockAll,
     setDraft,
     setError,
     setPendingAgentId,

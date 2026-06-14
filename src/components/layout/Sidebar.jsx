@@ -11,16 +11,21 @@ const ICONS = {
   usage: BarChart3,
 };
 
-export function Sidebar({ activeAgent, workflowStatus, showLogout = true, onSelectAgent, onLogout }) {
+export function Sidebar({ activeAgent, workflowStatus, showLogout = true, onOpenLanding, onSelectAgent, onLogout }) {
   const steps = workflowStatus?.steps?.length ? workflowStatus.steps : AGENT_WORKFLOW;
   const completedCount = steps.filter((item) => item.completed).length;
   const progressLabel = `${completedCount}/${steps.length}`;
 
   return (
     <aside className="sidebar" aria-label="Ascala navigation">
-      <div className="brand-stack">
+      <button
+        className="brand-stack brand-home-button"
+        type="button"
+        aria-label="Open Ascala intro"
+        onClick={onOpenLanding}
+      >
         <LogoMark />
-      </div>
+      </button>
 
       <div className="workflow-summary" aria-label="Agent workflow progress">
         <span>Sequence</span>
