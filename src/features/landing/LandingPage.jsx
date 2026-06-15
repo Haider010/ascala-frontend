@@ -1,4 +1,5 @@
-import { CheckCircle2, CircleDot, Lock, SendHorizontal, Sparkles } from "lucide-react";
+import React from "react";
+import { CheckCircle2, ChevronLeft, ChevronRight, CircleDot, Lock, SendHorizontal, Sparkles } from "lucide-react";
 import { LogoMark } from "../../components/shared/LogoMark";
 import { AGENT_WORKFLOW } from "../../config/agents";
 
@@ -71,27 +72,27 @@ const BENEFITS = [
 const FLOW_COPY = {
   molly: {
     title: "Audience",
-    description: "Clarify who the content is for and what they care about.",
+    description: "Clarify who the content is for, what they care about, what they struggle with, and which messages will actually make them pay attention.",
   },
   brandy: {
     title: "Voice",
-    description: "Lock the tone, language, and brand rules before writing.",
+    description: "Lock the tone, language, personality, and brand rules before any content gets written, so every later output sounds consistent.",
   },
   brandboard: {
     title: "BrandBoard",
-    description: "Convert audience and voice into reusable brand guidelines.",
+    description: "Convert audience intelligence and voice direction into reusable brand guidelines: colors, typography, UI rules, imagery, and messaging standards.",
   },
   sacha: {
     title: "Strategy",
-    description: "Plan themes, campaigns, CTAs, and posting direction.",
+    description: "Plan what to post and why: themes, campaigns, platform priorities, CTAs, cadence, and the production direction for the content team.",
   },
   escouade: {
     title: "Production",
-    description: "Generate structured batches ready to review and approve.",
+    description: "Generate structured social content batches that can be reviewed, revised, approved, protected, and exported without losing the strategy.",
   },
   uply: {
     title: "Publishing",
-    description: "Prepare approved content and media for GHL upload.",
+    description: "Prepare approved content and matching media for GHL upload by turning the final assets into a cleaner import-ready publishing file.",
   },
 };
 
@@ -151,6 +152,78 @@ function AgentSection({ step, index }) {
         </div>
       </div>
     </article>
+  );
+}
+
+function useVisibleCardCount() {
+  const [count, setCount] = React.useState(3);
+
+  React.useEffect(() => {
+    function updateCount() {
+      if (window.innerWidth < 720) {
+        setCount(1);
+      } else if (window.innerWidth < 1180) {
+        setCount(2);
+      } else {
+        setCount(3);
+      }
+    }
+
+    updateCount();
+    window.addEventListener("resize", updateCount);
+    return () => window.removeEventListener("resize", updateCount);
+  }, []);
+
+  return count;
+}
+
+function HorizontalCardRow({ label, children }) {
+  const items = React.Children.toArray(children);
+  const visibleCount = useVisibleCardCount();
+  const [startIndex, setStartIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    setStartIndex((current) => current % Math.max(1, items.length));
+  }, [items.length, visibleCount]);
+
+  const visibleItems = Array.from({ length: Math.min(visibleCount, items.length) }, (_, offset) => {
+    const index = (startIndex + offset) % items.length;
+    return items[index];
+  });
+
+  function move(direction) {
+    if (!items.length) return;
+    setStartIndex((current) => (current + direction + items.length) % items.length);
+  }
+
+  return (
+    <div className="landing-horizontal-shell">
+      <div className="landing-horizontal-frame" style={{ "--carousel-index": startIndex }}>
+        <button
+          type="button"
+          className="landing-carousel-edge is-left"
+          aria-label={`Show previous ${label} cards`}
+          onClick={() => move(-1)}
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <div className="landing-horizontal-row" style={{ "--visible-card-count": visibleItems.length }}>
+          {visibleItems.map((item, index) => (
+            <div className="landing-carousel-item" key={`${label}-${startIndex}-${index}`}>
+              {item}
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="landing-carousel-edge is-right"
+          aria-label={`Show next ${label} cards`}
+          onClick={() => move(1)}
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -252,11 +325,11 @@ export function LandingPage({ workflowStatus, isSessionReady, onEnterWorkspace }
             until the user has approved content and a cleaner path to publishing.
           </p>
         </div>
-        <div className="landing-flow">
+        <HorizontalCardRow label="workflow">
           {steps.map((step, index) => (
             <FlowPill key={step.id} step={step} index={index} />
           ))}
-        </div>
+        </HorizontalCardRow>
       </section>
 
       <section className="landing-section landing-detail-section">
@@ -268,11 +341,11 @@ export function LandingPage({ workflowStatus, isSessionReady, onEnterWorkspace }
             layer use the context already saved for the account.
           </p>
         </div>
-        <div className="landing-agent-list">
+        <HorizontalCardRow label="agents">
           {steps.map((step, index) => (
             <AgentSection key={step.id} step={step} index={index} />
           ))}
-        </div>
+        </HorizontalCardRow>
       </section>
 
     </main>
