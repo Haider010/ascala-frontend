@@ -45,6 +45,18 @@ export const AGENTS = {
 
 export const WORKSPACES = {
   ...AGENTS,
+  brandboard: {
+    id: "brandboard",
+    name: "BrandBoard 100X\u2122",
+    role: "Brand Guidelines",
+    accent: "#d6a6ff",
+    accentSoft: "#7b2cff",
+    mode: "Brand Guidelines",
+    specialty: "Premium identity system and source of truth",
+    prompt: "Generate premium brand guidelines from Molly and Brandy.",
+    welcome: "BrandBoard 100X\u2122 is ready to turn audience and brand voice into a client-facing brand guidelines system.",
+    kind: "brandboard",
+  },
   escouade: {
     id: "escouade",
     name: "Escouade\u2122",
@@ -88,6 +100,7 @@ export const DEFAULT_AGENT_ID = "molly";
 export const AGENT_WORKFLOW = [
   { id: "molly", name: "Molly\u2122", role: "Audience Intelligence", available: true },
   { id: "brandy", name: "Brandy\u2122", role: "Brand Voice", available: true },
+  { id: "brandboard", name: "BrandBoard 100X\u2122", role: "Brand Guidelines", available: true },
   { id: "sacha", name: "Sacha\u2122", role: "Strategy Director", available: true },
   { id: "escouade", name: "Escouade\u2122", role: "AI Production Team", available: true },
   { id: "uply", name: "Uply\u2122", role: "Publishing Assistant", available: true },

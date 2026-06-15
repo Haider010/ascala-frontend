@@ -1,10 +1,11 @@
-import { BarChart3, Brain, Check, CircleDot, Lock, LogOut, Mic, SendHorizontal, Sparkles, Target, Users } from "lucide-react";
+import { BarChart3, Brain, Check, CircleDot, FileStack, Lock, LogOut, Mic, SendHorizontal, Sparkles, Target, Users } from "lucide-react";
 import { AGENT_WORKFLOW, WORKSPACES } from "../../config/agents";
 import { LogoMark } from "../shared/LogoMark";
 
 const ICONS = {
   molly: Brain,
   brandy: Mic,
+  brandboard: FileStack,
   sacha: Target,
   escouade: Users,
   uply: SendHorizontal,

@@ -19,6 +19,14 @@ const AGENT_COPY = {
     input: "Websites, social profiles, voice notes, example posts, sales copy.",
     output: "Brand voice guide, tone rules, language system, voice engine.",
   },
+  brandboard: {
+    layer: "Brand Guidelines",
+    headline: "BrandBoard 100X\u2122",
+    title: "Turn strategy into brand guidelines.",
+    body: "Use BrandBoard after Molly and Brandy to create a premium identity system downstream agents can reuse.",
+    input: "Molly audience intelligence and Brandy brand voice strategy.",
+    output: "Foundation, audience messaging, colors, typography, buttons, UI rules, imagery, voice, content rules.",
+  },
   sacha: {
     layer: "Social Strategy",
     headline: "Sacha™",
@@ -68,6 +76,10 @@ const FLOW_COPY = {
   brandy: {
     title: "Voice",
     description: "Lock the tone, language, and brand rules before writing.",
+  },
+  brandboard: {
+    title: "BrandBoard",
+    description: "Convert audience and voice into reusable brand guidelines.",
   },
   sacha: {
     title: "Strategy",

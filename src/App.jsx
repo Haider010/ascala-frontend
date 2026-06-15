@@ -5,6 +5,7 @@ import { useAgentConsole } from "./hooks/useAgentConsole";
 import { Sidebar } from "./components/layout/Sidebar";
 import { MessageBubble } from "./components/chat/MessageBubble";
 import { Composer } from "./components/chat/Composer";
+import { BrandBoardWorkspace } from "./features/brandboard/BrandBoardWorkspace";
 import { EscouadeWorkspace } from "./features/escouade/EscouadeWorkspace";
 import { GhlSessionScreen } from "./features/ghl/GhlSessionScreen";
 import { LandingPage } from "./features/landing/LandingPage";
@@ -19,6 +20,7 @@ function AgentFlowRail({ activeAgent, workflowStatus, onSelectAgent }) {
   const stepInfo = {
     molly: "Builds the audience foundation: ICA, positioning, buyer psychology, and messaging angles.",
     brandy: "Defines the brand voice system: tone, language rules, guardrails, and downstream voice engine.",
+    brandboard: "Turns Molly and Brandy into premium brand guidelines for downstream execution.",
     sacha: "Turns the foundation into a social strategy: themes, cadence, CTAs, campaigns, and planning direction.",
     escouade: "Produces structured content batches from the approved strategy, then supports review, approval, and export.",
     uply: "Prepares publishing workflows from approved exports. This step unlocks after Escouade content is exported.",
@@ -111,6 +113,7 @@ export function App() {
   const [isClearingOutputs, setIsClearingOutputs] = React.useState(false);
   const [clearError, setClearError] = React.useState("");
   const [showLanding, setShowLanding] = React.useState(true);
+  const isBrandBoard = activeAgent.id === "brandboard";
   const isEscouade = activeAgent.id === "escouade";
   const isUply = activeAgent.id === "uply";
   const isUsage = activeAgent.id === "usage";
@@ -141,6 +144,10 @@ export function App() {
       brandy: {
         title: "Brand voice saved",
         description: `${unlockedStep.name} is now accessible with the brand context needed to continue.`,
+      },
+      brandboard: {
+        title: "Brand guidelines saved",
+        description: `${unlockedStep.name} is now accessible with the brand system ready to use.`,
       },
       sacha: {
         title: "Strategy plan saved",
@@ -380,7 +387,12 @@ export function App() {
 
         <div className="studio-layout">
           <div className="main-column">
-            {isEscouade ? (
+            {isBrandBoard ? (
+              <BrandBoardWorkspace
+                appSessionToken={ghlSession.data?.sessionToken}
+                onWorkflowStatus={applyWorkflowStatus}
+              />
+            ) : isEscouade ? (
               <EscouadeWorkspace
                 appSessionToken={ghlSession.data?.sessionToken}
                 onWorkflowStatus={applyWorkflowStatus}
@@ -459,7 +471,7 @@ export function App() {
             <div className="confirm-modal-copy">
               <h2 id="clear-all-title">Clear all agent outputs?</h2>
               <p>
-                This will remove saved Molly, Brandy, Sacha, and Escouade outputs for this account,
+                This will remove saved Molly, Brandy, BrandBoard, Sacha, and Escouade outputs for this account,
                 clear the stored chat history, lock the workflow again, and return you to the intro page.
               </p>
             </div>

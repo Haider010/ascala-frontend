@@ -5,6 +5,7 @@ import { fetchTokenUsage } from "../../services/usage";
 const AGENT_LABELS = {
   molly: "Molly",
   brandy: "Brandy",
+  brandboard: "BrandBoard",
   sacha: "Sacha",
   escouade: "Escouade",
 };
