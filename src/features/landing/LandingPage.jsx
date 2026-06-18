@@ -264,7 +264,7 @@ export function LandingPage({ workflowStatus, isSessionReady, onEnterWorkspace }
               onClick={onEnterWorkspace}
             >
               <SendHorizontal size={18} />
-              {currentStep ? `Continue with ${currentStep.name}` : "Open workspace"}
+              {currentStep ? `Start with ${currentStep.name}` : "Open workspace"}
             </button>
             <span>{isSessionReady ? `${completedCount}/${steps.length} layers complete` : "Preparing session..."}</span>
           </div>
