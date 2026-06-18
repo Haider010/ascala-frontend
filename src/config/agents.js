@@ -11,7 +11,7 @@ export const AGENTS = {
     specialty: "Research, segmentation, audience insight",
     prompt: "Ask Molly about audience research, customer psychology, or market insight.",
     welcome:
-      "Molly\u2122 is online. Send audience context, customer notes, or market details and I will map the intelligence.",
+      "Hi, I am Molly\u2122, your ideal client strategist!\n\nI help you figure out who your ideal client really is: the person most likely to need your offer, care about your message, and eventually buy.\n\nNo need to have it all figured out. Type \u201cGo\u201d and I\u2019ll ask you the right questions.",
   },
   brandy: {
     id: "brandy",
