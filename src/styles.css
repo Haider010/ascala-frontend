@@ -4914,3 +4914,6 @@ textarea {
     gap: 12px;
   }
 }
+header.hl_header.hl_header--collapse {
+    display: none !important;
+}
