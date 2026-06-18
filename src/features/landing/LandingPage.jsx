@@ -237,8 +237,8 @@ export function LandingPage({ workflowStatus, isSessionReady, onEnterWorkspace }
       <header className="landing-nav">
         <LogoMark />
         <div className="landing-nav-copy">
-          <strong>Ascala</strong>
-          <span>AI content workflow for GHL</span>
+          <strong>Social 100X</strong>
+          <span>Social Media Content Acceleration</span>
         </div>
         <button type="button" disabled={!isSessionReady} onClick={onEnterWorkspace}>
           Open workspace
