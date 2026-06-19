@@ -386,7 +386,7 @@ export function App() {
         />
 
         <div className="studio-layout">
-          <div className="main-column">
+          <div className={["main-column", isUsage ? "is-usage-column" : ""].filter(Boolean).join(" ")}>
             {isBrandBoard ? (
               <BrandBoardWorkspace
                 appSessionToken={ghlSession.data?.sessionToken}
