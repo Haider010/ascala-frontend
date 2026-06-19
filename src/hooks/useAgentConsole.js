@@ -1,6 +1,6 @@
 import React from "react";
 import { AGENTS, AGENT_WORKFLOW, WORKSPACES } from "../config/agents";
-import { AUTH_STORAGE_KEY } from "../config/auth";
+import { AUTH_STORAGE_KEY, DIRECT_DEV_LOGIN_TOKEN_STORAGE_KEY } from "../config/auth";
 import { STORAGE_KEY } from "../config/storage";
 import { fetchAgentHistory } from "../services/agents";
 import { createDirectDevSession, createGhlSession, requestGhlEncryptedUserData } from "../services/ghl";
@@ -109,7 +109,10 @@ export function useAgentConsole() {
     error: "",
   });
   const [isAuthenticated, setIsAuthenticated] = React.useState(
-    () => !isEmbeddedInFrame() && localStorage.getItem(AUTH_STORAGE_KEY) === "true",
+    () =>
+      !isEmbeddedInFrame() &&
+      localStorage.getItem(AUTH_STORAGE_KEY) === "true" &&
+      Boolean(localStorage.getItem(DIRECT_DEV_LOGIN_TOKEN_STORAGE_KEY)),
   );
   const [state, setState] = React.useState(createInitialState);
   const [draft, setDraft] = React.useState("");
@@ -197,7 +200,12 @@ export function useAgentConsole() {
       setGhlSession({ status: "checking", data: null, error: "" });
 
       try {
-        const session = await createDirectDevSession({ signal: controller.signal });
+        const loginToken = localStorage.getItem(DIRECT_DEV_LOGIN_TOKEN_STORAGE_KEY);
+        if (!loginToken) {
+          throw new Error("Direct dev login is required.");
+        }
+
+        const session = await createDirectDevSession({ signal: controller.signal, loginToken });
         if (controller.signal.aborted) return;
 
         if (!session.sessionToken) {
@@ -221,6 +229,9 @@ export function useAgentConsole() {
           return;
         }
         setGhlSession({ status: "idle", data: null, error: "" });
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        localStorage.removeItem(DIRECT_DEV_LOGIN_TOKEN_STORAGE_KEY);
+        setIsAuthenticated(false);
         setError(sessionError.message || "Unable to create the direct dev session.");
       }
     }
@@ -290,16 +301,23 @@ export function useAgentConsole() {
     setError("");
   }
 
-  function handleLogin() {
+  function handleLogin(loginToken) {
     if (isEmbedded) return;
+    if (!loginToken) {
+      setError("Direct dev login token is missing.");
+      return;
+    }
+
     directSessionAttemptedRef.current = false;
     localStorage.setItem(AUTH_STORAGE_KEY, "true");
+    localStorage.setItem(DIRECT_DEV_LOGIN_TOKEN_STORAGE_KEY, loginToken);
     setIsAuthenticated(true);
   }
 
   function handleLogout() {
     if (!isEmbedded) {
       localStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem(DIRECT_DEV_LOGIN_TOKEN_STORAGE_KEY);
     }
     directSessionAttemptedRef.current = false;
     setGhlSession({ status: "idle", data: null, error: "" });

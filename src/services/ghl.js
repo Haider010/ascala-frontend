@@ -51,11 +51,32 @@ export async function createGhlSession({ encryptedData, signal }) {
 }
 
 
-export async function createDirectDevSession({ signal } = {}) {
+export async function createDirectDevLogin({ username, password, signal } = {}) {
+  const response = await fetch(getApiUrl("/dev/login"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, password }),
+    signal,
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.detail || "Unable to verify direct dev login.");
+  }
+
+  return payload;
+}
+
+
+export async function createDirectDevSession({ signal, loginToken } = {}) {
   const response = await fetch(getApiUrl("/dev/session"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(loginToken ? { "X-Direct-Dev-Login": loginToken } : {}),
     },
     signal,
   });

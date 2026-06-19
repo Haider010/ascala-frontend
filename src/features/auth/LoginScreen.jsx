@@ -1,24 +1,28 @@
 import React from "react";
 import { ArrowRight, CircleAlert, LockKeyhole } from "lucide-react";
 import { heroArtworkUrl } from "../../config/assets";
-import { LOGIN_PASSWORD, LOGIN_USERNAME } from "../../config/auth";
 import { LogoMark } from "../../components/shared/LogoMark";
+import { createDirectDevLogin } from "../../services/ghl";
 
 export function LoginScreen({ onLogin }) {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    if (username.trim() === LOGIN_USERNAME && password === LOGIN_PASSWORD) {
+    setIsSubmitting(true);
+    try {
+      const session = await createDirectDevLogin({ username: username.trim(), password });
       setError("");
-      onLogin();
-      return;
+      onLogin(session.loginToken);
+    } catch (loginError) {
+      setError(loginError.message || "Invalid username or password.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setError("Invalid username or password.");
   }
 
   return (
@@ -57,6 +61,7 @@ export function LoginScreen({ onLogin }) {
             autoComplete="username"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
+            disabled={isSubmitting}
             autoFocus
           />
 
@@ -67,6 +72,7 @@ export function LoginScreen({ onLogin }) {
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            disabled={isSubmitting}
           />
 
           {error && (
@@ -76,11 +82,11 @@ export function LoginScreen({ onLogin }) {
             </div>
           )}
 
-          <button className="login-button" type="submit">
+          <button className="login-button" type="submit" disabled={isSubmitting}>
             <span className="arrow-circle">
               <ArrowRight size={24} />
             </span>
-            <span>Enter Ascala</span>
+            <span>{isSubmitting ? "Checking..." : "Enter Ascala"}</span>
           </button>
         </form>
       </section>

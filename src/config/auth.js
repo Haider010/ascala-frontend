@@ -1,3 +1,2 @@
 export const AUTH_STORAGE_KEY = "ascala.agent-console.authenticated";
-export const LOGIN_USERNAME = "admin";
-export const LOGIN_PASSWORD = "admin03224515302";
+export const DIRECT_DEV_LOGIN_TOKEN_STORAGE_KEY = "ascala.agent-console.direct-dev-login-token";
