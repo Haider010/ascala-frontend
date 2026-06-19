@@ -47,10 +47,10 @@ const AGENT_COPY = {
   uply: {
     layer: "Publishing Prep",
     headline: "Uply™",
-    title: "Prepare the GHL upload file.",
-    body: "Use Uply when approved content and media are ready for the GHL social planner import workflow.",
+    title: "Prepare the B10X Social Planner upload file.",
+    body: "Use Uply when approved content and media are ready for the B10X Social Planner import workflow.",
     input: "Planner CSV or XLSX and a media ZIP in matching row order.",
-    output: "GHL-ready social planner CSV with media links.",
+    output: "B10X Social Planner CSV with media links.",
   },
 };
 
@@ -65,7 +65,7 @@ const BENEFITS = [
   },
   {
     title: "Spend less time preparing uploads",
-    body: "Approved content can move toward GHL-ready CSV workflows instead of manual copy, paste, and file matching.",
+    body: "Approved content can move toward B10X Social Planner CSV workflows instead of manual copy, paste, and file matching.",
   },
 ];
 
@@ -92,7 +92,7 @@ const FLOW_COPY = {
   },
   uply: {
     title: "Publishing",
-    description: "Prepare approved content and matching media for GHL upload by turning the final assets into a cleaner import-ready publishing file.",
+    description: "Prepare approved content and matching media for B10X Social Planner upload by turning the final assets into a cleaner import-ready publishing file.",
   },
 };
 
@@ -253,7 +253,7 @@ export function LandingPage({ workflowStatus, isSessionReady, onEnterWorkspace }
           </span>
           <h1>From strategy to approved social content.</h1>
           <p>
-            Create consistent, brand-safe social content faster, then prepare it for GHL without stitching
+            Create consistent, brand-safe social content faster, then prepare it for B10X Social Planner without stitching
             everything together manually.
           </p>
           <div className="landing-actions">

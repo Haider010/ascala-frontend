@@ -31,12 +31,12 @@ export async function prepareUplySocialPlannerCsv({ appSessionToken, scheduleFil
 
   if (!response.ok) {
     const payload = await parseJson(response);
-    throw new Error(getResponseText(payload.detail) || payload.detail || "Unable to prepare the GHL CSV.");
+    throw new Error(getResponseText(payload.detail) || payload.detail || "Unable to prepare the B10X Social Planner CSV.");
   }
 
   const blob = await response.blob();
   const disposition = response.headers.get("Content-Disposition") || "";
-  const filename = disposition.match(/filename="([^"]+)"/)?.[1] || "uply-ghl-ready.csv";
+  const filename = disposition.match(/filename="([^"]+)"/)?.[1] || "uply-b10x-ready.csv";
   const summary = parseSummaryHeader(response);
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");

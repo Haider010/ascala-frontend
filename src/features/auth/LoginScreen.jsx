@@ -27,12 +27,12 @@ export function LoginScreen({ onLogin }) {
 
   return (
     <main className="login-shell" style={{ "--hero-art": `url("${heroArtworkUrl}")` }}>
-      <section className="login-copy" aria-label="Ascala GHL App">
+      <section className="login-copy" aria-label="Ascala B10X.ai App">
         <div className="hero-brand">
           <LogoMark />
           <span>
             <strong>ASCALA</strong>
-            <small>GHL APP</small>
+            <small>B10X.AI APP</small>
           </span>
         </div>
         <h1>
@@ -41,7 +41,7 @@ export function LoginScreen({ onLogin }) {
         </h1>
         <div className="hero-rule" />
         <p>
-          ASCALA - <span>GHL App</span>
+          ASCALA - <span>B10X.ai App</span>
         </p>
       </section>
 

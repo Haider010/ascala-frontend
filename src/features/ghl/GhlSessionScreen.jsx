@@ -10,13 +10,13 @@ export function GhlSessionScreen({ status, error }) {
           {isError ? <CircleAlert size={24} /> : <Loader2 className="spin" size={24} />}
         </div>
         <div>
-          <p className="eyebrow">HighLevel Session</p>
-          <h2 id="session-title">{isError ? "Access unavailable" : "Connecting to GHL"}</h2>
+          <p className="eyebrow">B10X.ai Session</p>
+          <h2 id="session-title">{isError ? "Access unavailable" : "Connecting to B10X.ai"}</h2>
         </div>
         <p className="session-copy">
           {isError
-            ? error || "Unable to verify this HighLevel account."
-            : "Verifying your signed HighLevel context and loading the correct workspace."}
+            ? error || "Unable to verify this B10X.ai account."
+            : "Verifying your signed B10X.ai context and loading the correct workspace."}
         </p>
       </section>
     </main>

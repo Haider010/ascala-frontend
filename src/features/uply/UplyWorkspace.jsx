@@ -45,9 +45,9 @@ export function UplyWorkspace({ appSessionToken }) {
         mediaZip,
       });
       setSummary(result.summary);
-      setStatus(`${result.filename} is ready. Media links were added to the GHL schedule CSV.`);
+      setStatus(`${result.filename} is ready. Media links were added to the B10X Social Planner CSV.`);
     } catch (prepareError) {
-      setError(prepareError.message || "Unable to prepare the GHL CSV.");
+      setError(prepareError.message || "Unable to prepare the B10X Social Planner CSV.");
     } finally {
       setIsPreparing(false);
     }
@@ -61,9 +61,9 @@ export function UplyWorkspace({ appSessionToken }) {
             <FileSpreadsheet size={24} />
           </span>
           <div>
-            <h2>GHL bulk upload prep</h2>
+            <h2>B10X Social Planner upload prep</h2>
             <p>
-              Upload the GHL planner file and a ZIP of matching media. Uply uploads each media file to GHL,
+              Upload the B10X Social Planner file and a ZIP of matching media. Uply uploads each media file,
               fills the image/video/GIF URL columns, and downloads a ready-to-import CSV.
             </p>
           </div>
@@ -72,7 +72,7 @@ export function UplyWorkspace({ appSessionToken }) {
         <form className="uply-form" onSubmit={handlePrepare}>
           <FileDrop
             label="Planner file"
-            description="CSV or XLSX exported from the GHL advanced sample"
+            description="CSV or XLSX from the B10X Social Planner import template"
             accept=".csv,.xlsx"
             file={scheduleFile}
             onChange={setScheduleFile}
@@ -91,7 +91,7 @@ export function UplyWorkspace({ appSessionToken }) {
             disabled={!scheduleFile || !mediaZip || !appSessionToken || isPreparing}
           >
             {isPreparing ? <Loader2 className="spin" size={18} /> : <UploadCloud size={18} />}
-            {isPreparing ? "Preparing CSV..." : "Prepare GHL CSV"}
+            {isPreparing ? "Preparing CSV..." : "Prepare B10X CSV"}
           </button>
         </form>
 
@@ -105,11 +105,11 @@ export function UplyWorkspace({ appSessionToken }) {
       <aside className="uply-panel uply-rules">
         <div className="uply-section-label">Workflow</div>
         <ol>
-          <li>Rows 1 and 2 are preserved from the GHL template.</li>
+          <li>Rows 1 and 2 are preserved from the B10X Social Planner template.</li>
           <li>Media files are uploaded in ZIP order.</li>
           <li>File 1 fills post row 1, file 2 fills post row 2, and so on.</li>
           <li>Images go to <code>imageUrls</code>, GIFs to <code>gifUrl</code>, videos to <code>videoUrls</code>.</li>
-          <li>The final CSV is capped at 90 post rows for GHL import.</li>
+          <li>The final CSV is capped at 90 post rows for B10X Social Planner import.</li>
         </ol>
 
         {summary && (

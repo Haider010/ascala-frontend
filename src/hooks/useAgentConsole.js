@@ -172,7 +172,7 @@ export function useAgentConsole() {
         setGhlSession({
           status: "error",
           data: null,
-          error: sessionError.message || "Unable to verify the HighLevel session.",
+          error: sessionError.message || "Unable to verify the B10X.ai session.",
         });
         setIsAuthenticated(false);
       }

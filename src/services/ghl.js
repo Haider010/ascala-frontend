@@ -1,18 +1,18 @@
-import { GHL_SESSION_TIMEOUT_MS } from "../config/runtime";
+import { PLATFORM_SESSION_TIMEOUT_MS } from "../config/runtime";
 import { getApiUrl } from "./api";
 import { getQueryParams, isEmbeddedInFrame } from "../utils/session";
 
 export function requestGhlEncryptedUserData() {
   return new Promise((resolve, reject) => {
     if (!isEmbeddedInFrame()) {
-      reject(new Error("This page is not embedded in HighLevel."));
+      reject(new Error("This page is not embedded in B10X.ai."));
       return;
     }
 
     const timeout = window.setTimeout(() => {
       window.removeEventListener("message", messageHandler);
-      reject(new Error("HighLevel did not return session details in time."));
-    }, GHL_SESSION_TIMEOUT_MS);
+      reject(new Error("B10X.ai did not return session details in time."));
+    }, PLATFORM_SESSION_TIMEOUT_MS);
 
     function messageHandler(event) {
       if (event.data?.message !== "REQUEST_USER_DATA_RESPONSE") return;
@@ -44,7 +44,7 @@ export async function createGhlSession({ encryptedData, signal }) {
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(payload.detail || "Unable to verify the HighLevel session.");
+    throw new Error(payload.detail || "Unable to verify the B10X.ai session.");
   }
 
   return payload;
