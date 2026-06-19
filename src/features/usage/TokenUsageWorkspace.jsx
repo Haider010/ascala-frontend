@@ -95,7 +95,21 @@ export function TokenUsageWorkspace({ appSessionToken }) {
     return () => controller.abort();
   }, [loadUsage]);
 
-  const months = usage?.months || [];
+  const rawMonths = usage?.months || [];
+  const hasCurrentMonthUsage = Boolean(
+    usage?.currentMonthKey
+      && (
+        Number(usage?.currentMonth?.inputTokens || 0)
+        || Number(usage?.currentMonth?.outputTokens || 0)
+        || Number(usage?.currentMonth?.totalTokens || 0)
+        || Number(usage?.currentMonth?.callCount || 0)
+      ),
+  );
+  const months = rawMonths.length
+    ? rawMonths
+    : hasCurrentMonthUsage
+      ? [{ month: usage.currentMonthKey, ...usage.currentMonth }]
+      : [];
   const agents = usage?.agents || [];
   const recentEvents = usage?.recentEvents || [];
 
