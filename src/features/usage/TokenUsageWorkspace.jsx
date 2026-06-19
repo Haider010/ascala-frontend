@@ -21,6 +21,18 @@ function formatMonth(month) {
   return new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(date);
 }
 
+function formatDateTime(value) {
+  if (!value) return "Unknown";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unknown";
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
 function TokenMetric({ label, value, tone = "default" }) {
   return (
     <div className={`usage-metric usage-metric-${tone}`}>
@@ -85,13 +97,14 @@ export function TokenUsageWorkspace({ appSessionToken }) {
 
   const months = usage?.months || [];
   const agents = usage?.agents || [];
+  const recentEvents = usage?.recentEvents || [];
 
   return (
     <section className="usage-workspace">
       <div className="usage-header">
         <div>
           <h2>Token Consumption</h2>
-          <p>Monthly and all-time usage for this account user.</p>
+          <p>Monthly and all-time usage across every user in this account.</p>
         </div>
         <button
           className="usage-refresh-button"
@@ -213,6 +226,49 @@ export function TokenUsageWorkspace({ appSessionToken }) {
                   ) : (
                     <tr>
                       <td colSpan="9">No agent usage has been recorded yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="usage-table-section">
+            <div className="usage-section-heading">
+              <h3>Recent Calls</h3>
+              <span>{recentEvents.length ? `Latest ${recentEvents.length}` : "No call events yet"}</span>
+            </div>
+            <div className="usage-table-wrap">
+              <table className="usage-table usage-table-events">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Agent</th>
+                    <th>Model</th>
+                    <th>Fresh input</th>
+                    <th>Cached input</th>
+                    <th>Input total</th>
+                    <th>Output</th>
+                    <th>Grand total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentEvents.length ? (
+                    recentEvents.map((event, index) => (
+                      <tr key={`${event.responseId || "event"}-${event.recordedAt || index}`}>
+                        <td>{formatDateTime(event.recordedAt)}</td>
+                        <td>{AGENT_LABELS[event.agentId] || event.agentId}</td>
+                        <td>{event.model || "Unknown"}</td>
+                        <td>{formatNumber(event.freshInputTokens)}</td>
+                        <td>{formatNumber(event.cachedInputTokens)}</td>
+                        <td>{formatNumber(event.inputTokens)}</td>
+                        <td>{formatNumber(event.outputTokens)}</td>
+                        <td>{formatNumber(event.totalTokens)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8">New AI calls will appear here after the event ledger is active.</td>
                     </tr>
                   )}
                 </tbody>
