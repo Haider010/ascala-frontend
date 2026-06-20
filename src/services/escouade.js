@@ -1,12 +1,33 @@
 import { getApiUrl } from "./api";
 import { getResponseText } from "../utils/format";
 
+const ESCOUADE_REQUEST_TIMEOUT_MS = 180000;
+
 async function parseJson(response) {
   return response.json().catch(() => ({}));
 }
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = ESCOUADE_REQUEST_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: options.signal || controller.signal,
+    });
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("Escouade is taking longer than expected. Please try again in a moment.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
 async function requestEscouade(path, { method = "GET", body, appSessionToken }) {
-  const response = await fetch(getApiUrl(path), {
+  const response = await fetchWithTimeout(getApiUrl(path), {
     method,
     headers: {
       ...(body ? { "Content-Type": "application/json" } : {}),
@@ -95,7 +116,7 @@ export function reopenEscouadeItems({ appSessionToken, batchId, itemIds }) {
 }
 
 export async function exportEscouadeCsv({ appSessionToken, batchId }) {
-  const response = await fetch(getApiUrl(`/escouade/batch/export-csv?batch_id=${encodeURIComponent(batchId)}`), {
+  const response = await fetchWithTimeout(getApiUrl(`/escouade/batch/export-csv?batch_id=${encodeURIComponent(batchId)}`), {
     headers: {
       Authorization: `Bearer ${appSessionToken}`,
     },

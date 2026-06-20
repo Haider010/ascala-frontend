@@ -385,8 +385,8 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
                 }}
               />
               <button type="button" disabled={!command.trim() || Boolean(pendingAction)} onClick={handleInstruction}>
-                <Send size={16} />
-                Run
+                {pendingAction === "instruction" ? <Loader2 className="spin" size={16} /> : <Send size={16} />}
+                {pendingAction === "instruction" ? "Working..." : "Run"}
               </button>
             </div>
 
