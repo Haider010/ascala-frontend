@@ -2655,7 +2655,7 @@ textarea {
 
 .escouade-dashboard-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
   padding: 12px 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -2816,6 +2816,20 @@ textarea {
 
 .escouade-item.is-approved {
   border-color: rgba(52, 211, 153, 0.28);
+}
+
+.escouade-item.is-revised {
+  border-color: rgba(214, 166, 255, 0.34);
+  background:
+    linear-gradient(135deg, rgba(168, 85, 255, 0.09), rgba(255, 255, 255, 0.035)),
+    rgba(255, 255, 255, 0.035);
+}
+
+.escouade-item.is-needs_revision {
+  border-color: rgba(245, 158, 11, 0.28);
+  background:
+    linear-gradient(135deg, rgba(245, 158, 11, 0.07), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.035);
 }
 
 .escouade-item.is-exported {

@@ -100,6 +100,17 @@ function DashboardCounter({ label, value }) {
   );
 }
 
+function statusLabel(status) {
+  const labels = {
+    draft: "Draft",
+    needs_revision: "Needs revision",
+    revised: "Revised",
+    approved: "Approved",
+    exported: "Exported",
+  };
+  return labels[status] || status;
+}
+
 export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
   const [memberType, setMemberType] = React.useState("image_post");
   const [batchName, setBatchName] = React.useState("Visibility Batch");
@@ -205,7 +216,7 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
       const updatedCounts = updatedItems.reduce((accumulator, item) => {
         accumulator[item.status] = (accumulator[item.status] || 0) + 1;
         return accumulator;
-      }, { draft: 0, needs_revision: 0, approved: 0, exported: 0 });
+      }, { draft: 0, needs_revision: 0, revised: 0, approved: 0, exported: 0 });
 
       return {
         ...current,
@@ -364,12 +375,12 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
               </div>
               <div className="escouade-actions">
                 <button type="button" disabled={!selectedCount || Boolean(pendingAction)} onClick={() => runAction("approve", async () => updateBatch(await approveEscouadeItems({ appSessionToken, batchId: batch.id, itemIds: selectedIds })))}>
-                  <Check size={16} />
-                  Approve
+                  {pendingAction === "approve" ? <Loader2 className="spin" size={16} /> : <Check size={16} />}
+                  {pendingAction === "approve" ? "Approving..." : "Approve"}
                 </button>
                 <button type="button" disabled={!selectedCount || Boolean(pendingAction)} onClick={() => runAction("reopen", async () => updateBatch(await reopenEscouadeItems({ appSessionToken, batchId: batch.id, itemIds: selectedIds })))}>
-                  <RotateCcw size={16} />
-                  Reopen
+                  {pendingAction === "reopen" ? <Loader2 className="spin" size={16} /> : <RotateCcw size={16} />}
+                  {pendingAction === "reopen" ? "Reopening..." : "Reopen"}
                 </button>
                 <button type="button" disabled={!approvedCount || Boolean(pendingAction)} onClick={() => runAction("export", async () => {
                   const response = await exportEscouadeCsv({ appSessionToken, batchId: batch.id });
@@ -386,6 +397,7 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
             <div className="escouade-dashboard-strip">
               <DashboardCounter label="Draft" value={counts.draft} />
               <DashboardCounter label="Needs Revision" value={counts.needs_revision} />
+              <DashboardCounter label="Revised" value={counts.revised} />
               <DashboardCounter label="Approved" value={counts.approved} />
               <DashboardCounter label="Exported" value={counts.exported} />
             </div>
@@ -404,7 +416,7 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
               />
               <button type="button" disabled={!command.trim() || Boolean(pendingAction)} onClick={handleInstruction}>
                 {pendingAction === "instruction" ? <Loader2 className="spin" size={16} /> : <Send size={16} />}
-                {pendingAction === "instruction" ? "Working..." : "Run"}
+                {pendingAction === "instruction" ? (selectedCount ? "Revising..." : "Working...") : "Run"}
               </button>
             </div>
 
@@ -418,8 +430,8 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
                   </label>
                   <div className="escouade-item-body">
                     <div className="escouade-item-head">
-                      <strong>{itemTitle(item)}</strong>
-                      <small>{item.status}</small>
+                          <strong>{itemTitle(item)}</strong>
+                      <small>{statusLabel(item.status)}</small>
                     </div>
                     {itemBody(item) && <p>{itemBody(item)}</p>}
                   </div>
@@ -435,7 +447,7 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
                       <div className="escouade-item-body">
                         <div className="escouade-item-head">
                           <strong>{itemTitle(item)}</strong>
-                          <small>approved</small>
+                          <small>Approved</small>
                         </div>
                       </div>
                     </article>
