@@ -383,10 +383,10 @@ textarea {
   bottom: clamp(18px, 2.4vh, 30px);
   z-index: 90;
   display: grid;
-  grid-template-columns: 34px minmax(0, 320px) 30px;
-  align-items: center;
+  grid-template-columns: 34px minmax(0, 342px) 30px;
+  align-items: start;
   gap: 11px;
-  width: min(440px, calc(100vw - 36px));
+  width: min(470px, calc(100vw - 36px));
   padding: 12px;
   border: 1px solid rgba(168, 85, 255, 0.42);
   border-radius: 14px;
@@ -417,7 +417,7 @@ textarea {
 .completion-toast-copy {
   display: grid;
   min-width: 0;
-  gap: 3px;
+  gap: 6px;
 }
 
 .completion-toast-copy strong {
@@ -431,6 +431,31 @@ textarea {
   color: rgba(247, 244, 255, 0.72);
   font-size: 0.82rem;
   line-height: 1.35;
+}
+
+.completion-toast-action {
+  justify-self: start;
+  min-height: 32px;
+  margin-top: 4px;
+  padding: 0 12px;
+  border: 1px solid rgba(214, 166, 255, 0.42);
+  border-radius: 999px;
+  color: #fff;
+  background:
+    linear-gradient(135deg, rgba(168, 85, 255, 0.26), rgba(214, 166, 255, 0.12)),
+    rgba(255, 255, 255, 0.055);
+  box-shadow: 0 0 18px rgba(168, 85, 255, 0.14);
+  font-size: 0.77rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.completion-toast-action:hover {
+  border-color: rgba(214, 166, 255, 0.72);
+  background:
+    linear-gradient(135deg, rgba(168, 85, 255, 0.36), rgba(214, 166, 255, 0.18)),
+    rgba(255, 255, 255, 0.075);
+  box-shadow: 0 0 24px rgba(168, 85, 255, 0.24);
 }
 
 .completion-toast-close {

@@ -140,25 +140,31 @@ export function App() {
     const copy = {
       molly: {
         title: "Strategic foundation saved",
-        description: `${unlockedStep.name} is now accessible with the context needed to shape the next layer.`,
+        description: `${unlockedStep.name} is now accessible. It will use Molly's saved audience and messaging context for the next layer.`,
       },
       brandy: {
         title: "Brand voice saved",
-        description: `${unlockedStep.name} is now accessible with the brand context needed to continue.`,
+        description: `${unlockedStep.name} is now accessible. It will use the saved audience, positioning, and voice foundation.`,
       },
       brandboard: {
         title: "Brand guidelines saved",
-        description: `${unlockedStep.name} is now accessible with the brand system ready to use.`,
+        description: `${unlockedStep.name} is now accessible. It will use the saved brand system to plan the content strategy.`,
       },
       sacha: {
         title: "Strategy plan saved",
-        description: `${unlockedStep.name} is now accessible with the strategy context needed for production.`,
+        description: `${unlockedStep.name} is now accessible. It will use the saved strategy context for production.`,
       },
     };
 
-    return copy[agentId] || {
+    const baseNotice = copy[agentId] || {
       title: "Output saved",
       description: `${unlockedStep.name} is now accessible with the context needed to continue.`,
+    };
+
+    return {
+      ...baseNotice,
+      nextAgentId: unlockedStep.id,
+      nextAgentName: unlockedStep.name,
     };
   }
 
@@ -229,7 +235,7 @@ export function App() {
           id: `${agent.id}-${Date.now()}`,
         });
       }
-      applyWorkflowStatus(nextWorkflowStatus);
+      applyWorkflowStatus(nextWorkflowStatus, false);
     } catch (requestError) {
       const description =
         requestError.name === "AbortError"
@@ -335,6 +341,18 @@ export function App() {
             <div className="completion-toast-copy">
               <strong>{completionNotice.title}</strong>
               <span>{completionNotice.description}</span>
+              {completionNotice.nextAgentId && (
+                <button
+                  className="completion-toast-action"
+                  type="button"
+                  onClick={() => {
+                    setActiveAgent(completionNotice.nextAgentId);
+                    setCompletionNotice(null);
+                  }}
+                >
+                  Continue to {completionNotice.nextAgentName}
+                </button>
+              )}
             </div>
             <button
               className="completion-toast-close"
