@@ -39,7 +39,7 @@ export const AGENTS = {
     specialty: "Campaign strategy, direction, execution planning",
     prompt: "Ask Sacha to turn approved strategy and brand voice into a clear execution direction.",
     welcome:
-      "Sacha\u2122 is online. Once Molly and Brandy have locked the foundation, I will shape the strategic direction for execution.",
+      "Hi, I'm Sacha\u2122.\n\nNow that Molly and Brandy have helped define your audience, positioning and brand foundation, I'll help transform that information into a complete social media strategy aligned with your business goals.\n\nI'll review your existing content and social media activity, identify opportunities, and help build your content pillars, themes, recurring series, campaigns, posting rhythm and content calendar.\n\nTogether, we'll create scalable content systems, bulk-production opportunities and repurposing strategies that make content creation easier, more consistent and more effective.\n\nMy goal is simple: help you stop posting randomly and start building a strategic content engine that supports visibility, engagement, leads and business growth.",
   },
 };
 
