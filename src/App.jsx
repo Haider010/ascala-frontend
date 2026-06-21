@@ -12,6 +12,7 @@ import { LandingPage } from "./features/landing/LandingPage";
 import { LoginScreen } from "./features/auth/LoginScreen";
 import { UplyWorkspace } from "./features/uply/UplyWorkspace";
 import { TokenUsageWorkspace } from "./features/usage/TokenUsageWorkspace";
+import { AGENT_REQUEST_TIMEOUT_MS } from "./config/runtime";
 
 function AgentFlowRail({ activeAgent, workflowStatus, onSelectAgent }) {
   const steps = workflowStatus?.steps || [];
@@ -197,7 +198,7 @@ export function App() {
     }));
 
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 90000);
+    const timeout = window.setTimeout(() => controller.abort(), AGENT_REQUEST_TIMEOUT_MS);
 
     try {
       const { reply, sessionId, workflowStatus: nextWorkflowStatus } = await sendToAgent({
@@ -232,7 +233,7 @@ export function App() {
     } catch (requestError) {
       const description =
         requestError.name === "AbortError"
-          ? "The request timed out after 90 seconds."
+          ? "The agent is taking longer than expected. Please try again in a moment."
           : requestError.message || "The agent request failed.";
 
       setError(description);

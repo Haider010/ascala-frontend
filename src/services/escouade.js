@@ -1,7 +1,8 @@
 import { getApiUrl } from "./api";
 import { getResponseText } from "../utils/format";
+import { AGENT_REQUEST_TIMEOUT_MS } from "../config/runtime";
 
-const ESCOUADE_REQUEST_TIMEOUT_MS = 180000;
+const ESCOUADE_REQUEST_TIMEOUT_MS = AGENT_REQUEST_TIMEOUT_MS;
 
 async function parseJson(response) {
   return response.json().catch(() => ({}));
