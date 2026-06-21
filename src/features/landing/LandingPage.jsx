@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, ChevronLeft, ChevronRight, CircleDot, Lock, SendHorizontal, Sparkles } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, SendHorizontal, Sparkles } from "lucide-react";
 import { LogoMark } from "../../components/shared/LogoMark";
 import { AGENT_WORKFLOW } from "../../config/agents";
 
@@ -101,19 +101,6 @@ function getStepState(step) {
   if (step.locked || !step.available) return "locked";
   if (step.status === "current") return "current";
   return "available";
-}
-
-function getStateLabel(state) {
-  if (state === "completed") return "Completed";
-  if (state === "current") return "Current";
-  if (state === "available") return "Available";
-  return "Locked";
-}
-
-function StatusIcon({ state }) {
-  if (state === "completed") return <CheckCircle2 size={16} />;
-  if (state === "locked") return <Lock size={15} />;
-  return <CircleDot size={16} />;
 }
 
 function FlowPill({ step, index }) {
