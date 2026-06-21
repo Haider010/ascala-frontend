@@ -2513,6 +2513,55 @@ textarea {
   box-shadow: 0 0 18px rgba(168, 85, 255, 0.14);
 }
 
+.escouade-brief-banner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px;
+  border: 1px solid #ffffff21;
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(168, 85, 255, 0.12), rgba(255, 255, 255, 0.035)),
+    rgba(255, 255, 255, 0.026);
+}
+
+.escouade-brief-banner div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.escouade-brief-banner strong {
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 760;
+}
+
+.escouade-brief-banner span {
+  color: rgba(247, 244, 255, 0.58);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.escouade-brief-banner button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(214, 166, 255, 0.34);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(168, 85, 255, 0.12);
+  font-size: 0.68rem;
+  font-weight: 820;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.escouade-brief-banner button:hover {
+  border-color: rgba(214, 166, 255, 0.56);
+  background: rgba(168, 85, 255, 0.18);
+}
+
 .escouade-format-group {
   display: grid;
   gap: 10px;

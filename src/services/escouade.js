@@ -71,6 +71,12 @@ export function generateEscouadeBatch({ appSessionToken, memberType, batchName, 
   });
 }
 
+export function getEscouadeProductionBrief({ appSessionToken }) {
+  return requestEscouade("/escouade/brief", {
+    appSessionToken,
+  });
+}
+
 export function commandEscouadeBatch({ appSessionToken, batchId, message }) {
   return requestEscouade("/escouade/batch/command", {
     method: "POST",

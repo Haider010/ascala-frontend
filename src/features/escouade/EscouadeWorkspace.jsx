@@ -5,6 +5,7 @@ import {
   commandEscouadeBatch,
   exportEscouadeCsv,
   generateEscouadeBatch,
+  getEscouadeProductionBrief,
   reopenEscouadeItems,
   reviseEscouadeItems,
 } from "../../services/escouade";
@@ -100,6 +101,57 @@ function DashboardCounter({ label, value }) {
   );
 }
 
+function firstValue(...values) {
+  return values.find((value) => value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && !value.length));
+}
+
+function optionOrFallback(value, options, fallback) {
+  if (value === undefined || value === null || value === "") return fallback;
+  const normalized = String(value).trim().toLowerCase();
+  const match = options.find((option) => String(option).trim().toLowerCase() === normalized);
+  return match || value;
+}
+
+function firstArrayValue(value) {
+  if (Array.isArray(value)) return value[0];
+  return value;
+}
+
+function uniqueOptions(options, value) {
+  if (value === undefined || value === null || value === "") return options;
+  const stringValue = String(value);
+  return options.map(String).includes(stringValue) ? options : [value, ...options];
+}
+
+function normalizeText(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function findMentionedOption(text, options) {
+  const normalizedText = normalizeText(text);
+  return options.find((option) => {
+    const normalizedOption = normalizeText(option);
+    return normalizedOption && normalizedText.includes(normalizedOption);
+  });
+}
+
+function findMentionedMemberType(text) {
+  const normalizedText = normalizeText(text);
+  const aliases = [
+    ["carrousel", ["carrousel", "carousel", "carousels"]],
+    ["reel", ["reel", "reels", "short video", "short videos"]],
+    ["image_post", ["image post", "image posts", "static post", "static posts"]],
+    ["stories", ["story", "stories"]],
+    ["text_post", ["text post", "text posts", "linkedin post", "long form"]],
+  ];
+  return aliases.find(([, names]) => names.some((name) => normalizedText.includes(name)))?.[0] || null;
+}
+
+function findMentionedQuantity(text) {
+  const match = normalizeText(text).match(/\b(5|10|15|20|30)\b/);
+  return match ? Number(match[1]) : null;
+}
+
 function statusLabel(status) {
   const labels = {
     draft: "Draft",
@@ -112,6 +164,7 @@ function statusLabel(status) {
 }
 
 export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
+  const hasAppliedBriefRef = React.useRef(false);
   const [memberType, setMemberType] = React.useState("image_post");
   const [batchName, setBatchName] = React.useState("Visibility Batch");
   const [sourceType, setSourceType] = React.useState("Sacha Theme");
@@ -131,6 +184,8 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
   const [status, setStatus] = React.useState("");
   const [error, setError] = React.useState("");
   const [pendingAction, setPendingAction] = React.useState("");
+  const [productionBrief, setProductionBrief] = React.useState(null);
+  const [isBriefLoading, setIsBriefLoading] = React.useState(false);
 
   const dashboard = batch?.dashboard || {};
   const counts = dashboard.counts || {};
@@ -139,6 +194,76 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
   const activeItems = batch?.items?.filter((item) => item.status !== "exported") || [];
   const approvedItems = batch?.items?.filter((item) => item.status === "approved") || [];
   const formatFilters = formatFiltersByMember[memberType] || defaultFormatFilters(memberType);
+
+  function applyProductionBrief(brief, { announce = true } = {}) {
+    if (!brief) return;
+
+    const nextMemberType = MEMBER_TYPES.some(([value]) => value === brief.member_type) ? brief.member_type : memberType;
+    const briefFilters = brief.filters || {};
+    const nextSourceType = optionOrFallback(firstValue(brief.source_type, briefFilters.source_type), OPTIONS.sourceType, sourceType);
+    const nextPlatform = optionOrFallback(
+      firstValue(briefFilters.primary_platform, firstArrayValue(briefFilters.platforms)),
+      OPTIONS.platform,
+      platform,
+    );
+    const nextContentStyle = optionOrFallback(firstArrayValue(briefFilters.content_style), OPTIONS.contentStyle, contentStyle);
+    const nextQuantity = Number(firstValue(briefFilters.quantity, quantity)) || quantity;
+    const nextFormatFilters = briefFilters.format_filters && typeof briefFilters.format_filters === "object"
+      ? briefFilters.format_filters
+      : {};
+
+    setMemberType(nextMemberType);
+    setBatchName(firstValue(brief.batch_name, batchName));
+    setSourceType(nextSourceType);
+    setSourceLabel(firstValue(brief.source_label, briefFilters.source_label, sourceLabel));
+    setQuantity(nextQuantity);
+    setPlatform(nextPlatform);
+    setObjective(optionOrFallback(briefFilters.objective, OPTIONS.objective, objective));
+    setLanguage(optionOrFallback(briefFilters.language, OPTIONS.language, language));
+    setContentStyle(nextContentStyle);
+    setCtaPreference(optionOrFallback(briefFilters.cta_preference, OPTIONS.ctaPreference, ctaPreference));
+    setInteractionStyle(optionOrFallback(briefFilters.interaction_style, OPTIONS.interactionStyle, interactionStyle));
+    setMessage(firstValue(brief.message, briefFilters.special_instructions, message));
+    setFormatFiltersByMember((current) => ({
+      ...current,
+      [nextMemberType]: {
+        ...defaultFormatFilters(nextMemberType),
+        ...(current[nextMemberType] || {}),
+        ...nextFormatFilters,
+      },
+    }));
+
+    if (announce) {
+      setStatus("Sacha production brief applied to the batch setup.");
+    }
+  }
+
+  React.useEffect(() => {
+    if (!appSessionToken || hasAppliedBriefRef.current) return;
+
+    let isMounted = true;
+    setIsBriefLoading(true);
+    getEscouadeProductionBrief({ appSessionToken })
+      .then((payload) => {
+        if (!isMounted) return;
+        if (payload?.brief) {
+          setProductionBrief(payload);
+          applyProductionBrief(payload.brief, { announce: false });
+          setStatus("Sacha production brief loaded into Escouade.");
+        }
+        hasAppliedBriefRef.current = true;
+      })
+      .catch(() => {
+        if (isMounted) hasAppliedBriefRef.current = true;
+      })
+      .finally(() => {
+        if (isMounted) setIsBriefLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [appSessionToken]);
 
   function changeMember(nextMemberType) {
     setMemberType(nextMemberType);
@@ -209,6 +334,53 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
     }));
   }
 
+  function applySetupHintsFromText(text) {
+    const updates = [];
+    const nextMemberType = findMentionedMemberType(text);
+    const nextQuantity = findMentionedQuantity(text);
+    const nextPlatform = findMentionedOption(text, OPTIONS.platform);
+    const nextObjective = findMentionedOption(text, OPTIONS.objective);
+    const nextLanguage = findMentionedOption(text, OPTIONS.language);
+    const nextStyle = findMentionedOption(text, OPTIONS.contentStyle);
+    const nextCta = findMentionedOption(text, OPTIONS.ctaPreference);
+    const nextInteraction = findMentionedOption(text, OPTIONS.interactionStyle);
+
+    if (nextMemberType && nextMemberType !== memberType) {
+      setMemberType(nextMemberType);
+      updates.push("format");
+    }
+    if (nextQuantity && nextQuantity !== Number(quantity)) {
+      setQuantity(nextQuantity);
+      updates.push("quantity");
+    }
+    if (nextPlatform && nextPlatform !== platform) {
+      setPlatform(nextPlatform);
+      updates.push("platform");
+    }
+    if (nextObjective && nextObjective !== objective) {
+      setObjective(nextObjective);
+      updates.push("objective");
+    }
+    if (nextLanguage && nextLanguage !== language) {
+      setLanguage(nextLanguage);
+      updates.push("language");
+    }
+    if (nextStyle && nextStyle !== contentStyle) {
+      setContentStyle(nextStyle);
+      updates.push("content style");
+    }
+    if (nextCta && nextCta !== ctaPreference) {
+      setCtaPreference(nextCta);
+      updates.push("CTA preference");
+    }
+    if (nextInteraction && nextInteraction !== interactionStyle) {
+      setInteractionStyle(nextInteraction);
+      updates.push("interaction style");
+    }
+
+    return updates;
+  }
+
   function markApprovedItemsExported() {
     setBatch((current) => {
       if (!current) return current;
@@ -237,6 +409,14 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
     const wantsApprove = lower.includes("approve");
     const wantsReopen = lower.includes("reopen");
     const shouldUseSelectedItems = selectedCount > 0 && !mentionsSpecificPost;
+    const setupUpdates = applySetupHintsFromText(trimmedCommand);
+    const onlySetupUpdate = setupUpdates.length > 0 && !wantsExport && !wantsApprove && !wantsReopen && !shouldUseSelectedItems && !mentionsSpecificPost;
+
+    if (onlySetupUpdate) {
+      setCommand("");
+      setStatus(`Updated setup: ${setupUpdates.join(", ")}.`);
+      return;
+    }
 
     await runAction("instruction", async () => {
       if (wantsExport) {
@@ -292,6 +472,24 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
           ))}
         </div>
 
+        {(productionBrief?.brief || isBriefLoading) && (
+          <div className="escouade-brief-banner">
+            <div>
+              <strong>{isBriefLoading ? "Checking Sacha brief..." : "Sacha brief loaded"}</strong>
+              <span>
+                {isBriefLoading
+                  ? "Looking for the latest production parameters from Sacha."
+                  : "Escouade fields were prefilled from the saved social strategy."}
+              </span>
+            </div>
+            {productionBrief?.brief && (
+              <button type="button" onClick={() => applyProductionBrief(productionBrief.brief)}>
+                Reapply
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="escouade-control">
           <label>Batch name</label>
           <input value={batchName} onChange={(event) => setBatchName(event.target.value)} />
@@ -304,8 +502,8 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
           <input value={sourceLabel} onChange={(event) => setSourceLabel(event.target.value)} />
         </div>
 
-        <SelectControl label="Quantity" value={String(quantity)} options={OPTIONS.quantity.map(String)} onChange={setQuantity} />
-        <SelectControl label="Platform" value={platform} options={OPTIONS.platform} onChange={setPlatform} />
+        <SelectControl label="Quantity" value={String(quantity)} options={uniqueOptions(OPTIONS.quantity, quantity).map(String)} onChange={setQuantity} />
+        <SelectControl label="Platform" value={platform} options={uniqueOptions(OPTIONS.platform, platform)} onChange={setPlatform} />
         <SelectControl label="Objective" value={objective} options={OPTIONS.objective} onChange={setObjective} />
         <SelectControl label="Language" value={language} options={OPTIONS.language} onChange={setLanguage} />
         <SelectControl label="Content style" value={contentStyle} options={OPTIONS.contentStyle} onChange={setContentStyle} />
