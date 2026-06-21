@@ -2518,13 +2518,41 @@ textarea {
   background: rgba(168, 85, 255, 0.055);
 }
 
-.escouade-format-group > span,
+.escouade-format-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.escouade-format-header > span,
 .escouade-section-label {
   color: var(--purple-3);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.11em;
   text-transform: uppercase;
+}
+
+.escouade-format-header button {
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: rgba(247, 244, 255, 0.72);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.escouade-format-header button:hover {
+  border-color: rgba(214, 166, 255, 0.36);
+  color: #fff;
+  background: rgba(168, 85, 255, 0.12);
 }
 
 .escouade-control.wide {

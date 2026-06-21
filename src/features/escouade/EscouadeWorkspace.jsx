@@ -62,6 +62,10 @@ function defaultFormatFilters(memberType) {
   return Object.fromEntries(Object.entries(FORMAT_OPTIONS[memberType] || {}).map(([key, values]) => [key, values[0]]));
 }
 
+function defaultFormatFilterState() {
+  return Object.fromEntries(MEMBER_TYPES.map(([memberType]) => [memberType, defaultFormatFilters(memberType)]));
+}
+
 function itemTitle(item) {
   const content = item.content || {};
   return content.overlay_text || content.cover_headline || content.hook || content.sequence_name || item.post_id;
@@ -110,7 +114,7 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
   const [language, setLanguage] = React.useState("English");
   const [interactionStyle, setInteractionStyle] = React.useState("Social Media Manager Mode");
   const [referenceMode, setReferenceMode] = React.useState("Use Molly™, Brandy™, Sacha™ only");
-  const [formatFilters, setFormatFilters] = React.useState(defaultFormatFilters("image_post"));
+  const [formatFiltersByMember, setFormatFiltersByMember] = React.useState(defaultFormatFilterState);
   const [message, setMessage] = React.useState("Create a polished batch using the approved strategy.");
   const [command, setCommand] = React.useState("");
   const [batch, setBatch] = React.useState(null);
@@ -125,10 +129,10 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
   const approvedCount = counts.approved || 0;
   const activeItems = batch?.items?.filter((item) => item.status !== "exported") || [];
   const approvedItems = batch?.items?.filter((item) => item.status === "approved") || [];
+  const formatFilters = formatFiltersByMember[memberType] || defaultFormatFilters(memberType);
 
   function changeMember(nextMemberType) {
     setMemberType(nextMemberType);
-    setFormatFilters(defaultFormatFilters(nextMemberType));
     setSelectedIds([]);
   }
 
@@ -181,7 +185,20 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
   }
 
   function setFormatValue(key, value) {
-    setFormatFilters((current) => ({ ...current, [key]: value }));
+    setFormatFiltersByMember((current) => ({
+      ...current,
+      [memberType]: {
+        ...(current[memberType] || defaultFormatFilters(memberType)),
+        [key]: value,
+      },
+    }));
+  }
+
+  function restoreCurrentFormatDefaults() {
+    setFormatFiltersByMember((current) => ({
+      ...current,
+      [memberType]: defaultFormatFilters(memberType),
+    }));
   }
 
   function markApprovedItemsExported() {
@@ -289,7 +306,12 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
         <SelectControl label="Reference mode" value={referenceMode} options={OPTIONS.referenceMode} onChange={setReferenceMode} />
 
         <div className="escouade-format-group">
-          <span>Format controls</span>
+          <div className="escouade-format-header">
+            <span>Format controls</span>
+            <button type="button" onClick={restoreCurrentFormatDefaults}>
+              Restore defaults
+            </button>
+          </div>
           {Object.entries(FORMAT_OPTIONS[memberType] || {}).map(([key, values]) => (
             <SelectControl
               key={key}
