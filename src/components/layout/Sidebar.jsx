@@ -108,7 +108,7 @@ export function Sidebar({ activeAgent, workflowStatus, showLogout = true, onOpen
       )}
 
       <footer className="sidebar-footer">
-        &copy; 2025 ASCALA
+        &copy; 2026 ASCALA
         <br />
         All rights reserved.
       </footer>
