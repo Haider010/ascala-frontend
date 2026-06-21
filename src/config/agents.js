@@ -11,7 +11,7 @@ export const AGENTS = {
     specialty: "Research, segmentation, audience insight",
     prompt: "Ask Molly about audience research, customer psychology, or market insight.",
     welcome:
-      "Hi, I am Molly\u2122, your ideal client strategist!\n\nI help you figure out who your ideal client really is: the person most likely to need your offer, care about your message, and eventually buy.\n\nNo need to have it all figured out. Type \u201cGo\u201d and I\u2019ll ask you the right questions.",
+      "Hi, I'm Molly\u2122.\n\nI'll help identify who your best clients are, what motivates them to buy, what challenges they face, and how your business should position itself to attract them.\n\nBefore we begin, please share any assets you'd like me to analyze: website URLs, sales pages, funnel pages, social profiles, brand documents, client avatars, marketing materials, pitch decks, PDFs, or offer notes.\n\nThe more information I can review, the more accurate your Audience Intelligence Report will be.",
   },
   brandy: {
     id: "brandy",
