@@ -25,7 +25,7 @@ export const AGENTS = {
     specialty: "Messaging, positioning, creative direction",
     prompt: "Ask Brandy about brand voice, client context, or campaign messaging.",
     welcome:
-      "Brandy\u2122 is online. Send the offer, audience, or campaign context and I will shape the brand direction.",
+      "Hi, I'm Brandy\u2122.\n\nI'll use Molly's audience intelligence and your brand assets to define how your brand should sound, communicate, feel, and behave.\n\nSend any website, social profile, brand guide, sales page, example content, logo notes, PDFs, or existing copy you want me to analyze.\n\nI'll help formalize the brand foundation, messaging, voice, visual direction, and rules future agents should follow.",
   },
   sacha: {
     id: "sacha",
