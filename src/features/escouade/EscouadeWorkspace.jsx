@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Check, Download, Loader2, RotateCcw, Send, WandSparkles } from "lucide-react";
 import {
   approveEscouadeItems,
@@ -22,11 +22,10 @@ const OPTIONS = {
   quantity: [5, 10, 15, 20, 30],
   platform: ["Instagram", "Facebook", "LinkedIn", "TikTok", "YouTube Shorts", "Multi-platform"],
   objective: ["Visibility", "Engagement", "Follower growth", "Lead Generation", "Sales", "Authority building", "Community growth", "Appointment bookings", "Webinar registrations"],
-  language: ["English", "French Québec", "Bilingual", "Use brand default"],
+  language: ["English", "French QuÃ©bec", "Bilingual", "Use brand default"],
   contentStyle: ["Educational", "Premium", "Friendly", "Bold", "Playful", "Thought leadership", "Soft-sell", "Direct response", "Practical/how-to", "Myth-busting", "Behind-the-scenes", "Story-driven", "Conversion-focused"],
   ctaPreference: ["No CTA", "Soft CTA", "Engagement CTA", "Lead generation CTA", "Sales CTA", "Custom CTA"],
   interactionStyle: ["Fast & Efficient", "Creative Partner", "Strategic Coach", "Social Media Manager Mode", "Friendly Best Buddy", "Premium Brand Editor", "Direct Response Copywriter"],
-  referenceMode: ["Use app knowledge", "Use Molly™, Brandy™, Sacha™ only", "Use selected files/references", "Use selected company info", "Use custom notes", "No additional reference"],
 };
 
 const FORMAT_OPTIONS = {
@@ -74,7 +73,7 @@ function itemTitle(item) {
 function itemBody(item) {
   const content = item.content || {};
   if (content.slides?.length) {
-    return `${content.slides.length} slides · ${content.strategic_note || content.objective || ""}`.trim();
+    return `${content.slides.length} slides Â· ${content.strategic_note || content.objective || ""}`.trim();
   }
   return content.caption || content.script || content.body || content.final_cta || "";
 }
@@ -113,7 +112,6 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
   const [ctaPreference, setCtaPreference] = React.useState("Soft CTA");
   const [language, setLanguage] = React.useState("English");
   const [interactionStyle, setInteractionStyle] = React.useState("Social Media Manager Mode");
-  const [referenceMode, setReferenceMode] = React.useState("Use Molly™, Brandy™, Sacha™ only");
   const [formatFiltersByMember, setFormatFiltersByMember] = React.useState(defaultFormatFilterState);
   const [message, setMessage] = React.useState("Create a polished batch using the approved strategy.");
   const [command, setCommand] = React.useState("");
@@ -148,7 +146,6 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
       cta_preference: ctaPreference,
       language,
       interaction_style: interactionStyle,
-      reference_mode: [referenceMode],
       special_instructions: message,
       format_filters: formatFilters,
     };
@@ -303,7 +300,6 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
         <SelectControl label="Content style" value={contentStyle} options={OPTIONS.contentStyle} onChange={setContentStyle} />
         <SelectControl label="CTA preference" value={ctaPreference} options={OPTIONS.ctaPreference} onChange={setCtaPreference} />
         <SelectControl label="Interaction style" value={interactionStyle} options={OPTIONS.interactionStyle} onChange={setInteractionStyle} />
-        <SelectControl label="Reference mode" value={referenceMode} options={OPTIONS.referenceMode} onChange={setReferenceMode} />
 
         <div className="escouade-format-group">
           <div className="escouade-format-header">
@@ -364,7 +360,7 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
             <div className="escouade-batch-toolbar">
               <div>
                 <strong>{batch.batch_name || batch.member_type.replace("_", " ")}</strong>
-                <span>{batch.source_label || batch.source_type} · {batch.member_type.replace("_", " ")}</span>
+                <span>{batch.source_label || batch.source_type} Â· {batch.member_type.replace("_", " ")}</span>
               </div>
               <div className="escouade-actions">
                 <button type="button" disabled={!selectedCount || Boolean(pendingAction)} onClick={() => runAction("approve", async () => updateBatch(await approveEscouadeItems({ appSessionToken, batchId: batch.id, itemIds: selectedIds })))}>
