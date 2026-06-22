@@ -9,6 +9,7 @@ import {
   reopenEscouadeItems,
   reviseEscouadeItems,
 } from "../../services/escouade";
+import { ESCOUADE_MEMBER_ORBS } from "../../config/agentOrbs";
 
 const MEMBER_TYPES = [
   ["image_post", "Image Posts"],
@@ -467,6 +468,7 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
               type="button"
               onClick={() => changeMember(value)}
             >
+              <img src={ESCOUADE_MEMBER_ORBS[value]} alt="" />
               {label}
             </button>
           ))}

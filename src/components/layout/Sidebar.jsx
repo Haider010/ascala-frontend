@@ -1,5 +1,6 @@
 import { BarChart3, Brain, Check, CircleDot, FileStack, Lock, LogOut, Mic, SendHorizontal, Sparkles, Target, Users } from "lucide-react";
 import { AGENT_WORKFLOW, WORKSPACES } from "../../config/agents";
+import { AGENT_ORBS } from "../../config/agentOrbs";
 import { LogoMark } from "../shared/LogoMark";
 
 const ICONS = {
@@ -36,6 +37,7 @@ export function Sidebar({ activeAgent, workflowStatus, showLogout = true, onOpen
       <nav className="side-nav">
         {steps.map((item, index) => {
           const Icon = ICONS[item.id] || Sparkles;
+          const orb = AGENT_ORBS[item.id];
           const isWorkspace = item.id in WORKSPACES;
           const isActive = isWorkspace && item.id === activeAgent.id;
           const isCompleted = item.completed || item.status === "completed";
@@ -65,7 +67,7 @@ export function Sidebar({ activeAgent, workflowStatus, showLogout = true, onOpen
             >
               <span className="nav-step-index">{String(index + 1).padStart(2, "0")}</span>
               <span className="nav-agent-icon">
-                <Icon size={19} />
+                {orb ? <img className="nav-agent-orb" src={orb} alt="" /> : <Icon size={19} />}
               </span>
               <span className="nav-copy">
                 <strong>{item.name}</strong>

@@ -2,6 +2,7 @@ import React from "react";
 import { CheckCircle2, ChevronLeft, ChevronRight, SendHorizontal, Sparkles } from "lucide-react";
 import { LogoMark } from "../../components/shared/LogoMark";
 import { AGENT_WORKFLOW } from "../../config/agents";
+import { AGENT_ORBS } from "../../config/agentOrbs";
 
 const AGENT_COPY = {
   molly: {
@@ -105,9 +106,12 @@ function getStepState(step) {
 
 function FlowPill({ step, index }) {
   const copy = FLOW_COPY[step.id] || {};
+  const orb = AGENT_ORBS[step.id];
   return (
     <div className="landing-flow-pill">
-      <span className="landing-flow-number">{String(index + 1).padStart(2, "0")}</span>
+      <span className="landing-flow-number">
+        {orb ? <img src={orb} alt="" /> : String(index + 1).padStart(2, "0")}
+      </span>
       <strong>{copy.title || step.name}</strong>
       <small>{step.name}</small>
       <p>{copy.description}</p>
@@ -118,10 +122,11 @@ function FlowPill({ step, index }) {
 
 function AgentSection({ step, index }) {
   const copy = AGENT_COPY[step.id] || {};
+  const orb = AGENT_ORBS[step.id];
   return (
     <article className="landing-agent-section">
       <div className="landing-agent-index">
-        <span>{String(index + 1).padStart(2, "0")}</span>
+        {orb ? <img src={orb} alt="" /> : <span>{String(index + 1).padStart(2, "0")}</span>}
       </div>
       <div className="landing-agent-copy">
         <span className="landing-agent-layer">{copy.layer || step.role}</span>

@@ -258,6 +258,15 @@ textarea {
   background: rgba(168, 85, 255, 0.08);
 }
 
+.nav-agent-orb {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  filter: drop-shadow(0 0 9px rgba(168, 85, 255, 0.42));
+}
+
 .nav-agent-icon svg,
 .nav-state svg {
   color: rgba(255, 255, 255, 0.9);
@@ -974,6 +983,14 @@ textarea {
   letter-spacing: 0.08em;
 }
 
+.landing-flow-number img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  filter: drop-shadow(0 0 12px rgba(168, 85, 255, 0.42));
+}
+
 .landing-flow-pill strong {
   margin-top: 8px;
   color: #fff;
@@ -1113,6 +1130,14 @@ textarea {
   font-size: 0.78rem;
   font-weight: 900;
   box-shadow: 0 0 22px rgba(168, 85, 255, 0.14);
+}
+
+.landing-agent-index img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  filter: drop-shadow(0 0 13px rgba(168, 85, 255, 0.46));
 }
 
 .landing-agent-copy {
@@ -2498,12 +2523,25 @@ textarea {
 }
 
 .escouade-member-buttons button {
-  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  gap: 8px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
   color: rgba(255, 255, 255, 0.72);
   background: rgba(255, 255, 255, 0.035);
   font-size: 0.82rem;
+}
+
+.escouade-member-buttons button img {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  filter: drop-shadow(0 0 8px rgba(168, 85, 255, 0.34));
 }
 
 .escouade-member-buttons button.is-active {
