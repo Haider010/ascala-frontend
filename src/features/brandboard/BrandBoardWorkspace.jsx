@@ -382,7 +382,7 @@ export function BrandBoardWorkspace({ appSessionToken, onWorkflowStatus }) {
       .then((payload) => {
         setOutput(payload.output || null);
         setUpdatedAt(payload.updatedAt || null);
-        if (payload.workflowStatus) onWorkflowStatus(payload.workflowStatus, false);
+        if (payload.workflowStatus) onWorkflowStatus(payload.workflowStatus, false, false);
       })
       .catch((requestError) => {
         if (controller.signal.aborted) return;
@@ -420,7 +420,7 @@ export function BrandBoardWorkspace({ appSessionToken, onWorkflowStatus }) {
       }
       setOutput(payload.output || null);
       setUpdatedAt(payload.updatedAt || null);
-      if (payload.workflowStatus) onWorkflowStatus(payload.workflowStatus, false);
+      if (payload.workflowStatus) onWorkflowStatus(payload.workflowStatus, false, true);
       setGenerationStatus(payload.output ? "Brand guidelines regenerated." : "BrandBoard request completed.");
       console.info("[Ascala] BrandBoard generation completed", {
         hasOutput: Boolean(payload.output),
@@ -567,7 +567,7 @@ export function BrandBoardWorkspace({ appSessionToken, onWorkflowStatus }) {
           <FileStack size={34} />
           <strong>BrandBoard is ready to generate.</strong>
           <p>
-            Once Molly and Brandy are completed, generate the brand guidelines system that Sacha and future agents can use.
+            Molly and Brandy are complete. Generate the brand guidelines system that Sacha and future agents can use.
           </p>
           <div className="brandboard-empty-actions">
             <label className="brandboard-instruction-field">

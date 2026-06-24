@@ -72,3 +72,25 @@ export async function clearAccountOutputs({ appSessionToken }) {
 
   return payload;
 }
+
+
+export async function clearAgentOutput({ appSessionToken, agentId }) {
+  if (!appSessionToken) {
+    throw new Error("Backend account session is not ready yet.");
+  }
+
+  const response = await fetch(getApiUrl(`/account/clear-output/${encodeURIComponent(agentId)}`), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${appSessionToken}`,
+    },
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(getResponseText(payload.detail) || payload.detail || "Unable to clear agent output.");
+  }
+
+  return payload;
+}

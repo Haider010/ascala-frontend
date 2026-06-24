@@ -14,6 +14,10 @@ export function stripAscalaMarkers(value) {
 
   return value
     .replace(
+      /<!--\s*ASCALA_ESCOUADE_MENU_START\s*-->\s*[\s\S]*?\s*<!--\s*ASCALA_ESCOUADE_MENU_END\s*-->/gi,
+      "",
+    )
+    .replace(
       /<!--\s*ASCALA_OUTPUT_START\b.*?-->\s*([\s\S]*?)\s*<!--\s*ASCALA_OUTPUT_END\s*-->/gi,
       "$1",
     )

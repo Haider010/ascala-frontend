@@ -1,4 +1,5 @@
 import brandyOrb from "../assets/agent-orbs/Brandy.png";
+import brandboardOrb from "../assets/agent-orbs/brandboard.png";
 import escouadeCarrouselOrb from "../assets/agent-orbs/Escouade Carrousel.png";
 import escouadeImageOrb from "../assets/agent-orbs/Escouade Image.png";
 import escouadeReelOrb from "../assets/agent-orbs/Escouade REEL.png";
@@ -11,6 +12,7 @@ import uplyOrb from "../assets/agent-orbs/Uply.png";
 export const AGENT_ORBS = {
   molly: mollyOrb,
   brandy: brandyOrb,
+  brandboard: brandboardOrb,
   sacha: sachaOrb,
   escouade: escouadeImageOrb,
   uply: uplyOrb,

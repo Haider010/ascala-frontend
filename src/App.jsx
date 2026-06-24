@@ -1,6 +1,6 @@
 import React from "react";
 import { CheckCircle2, CircleAlert, Trash2, X } from "lucide-react";
-import { clearAccountOutputs, sendToAgent } from "./services/agents";
+import { clearAccountOutputs, clearAgentOutput, sendToAgent } from "./services/agents";
 import { useAgentConsole } from "./hooks/useAgentConsole";
 import { Sidebar } from "./components/layout/Sidebar";
 import { MessageBubble } from "./components/chat/MessageBubble";
@@ -29,6 +29,7 @@ export function App() {
     isConversationLoading,
     pendingAgentId,
     resetConsole,
+    resetAgentConversation,
     setActiveAgent,
     setDevUnlockAll,
     setDraft,
@@ -43,13 +44,17 @@ export function App() {
   const scrollRef = React.useRef(null);
   const [completionNotice, setCompletionNotice] = React.useState(null);
   const [showClearConfirm, setShowClearConfirm] = React.useState(false);
+  const [showClearAgentConfirm, setShowClearAgentConfirm] = React.useState(false);
   const [isClearingOutputs, setIsClearingOutputs] = React.useState(false);
+  const [isClearingAgentOutput, setIsClearingAgentOutput] = React.useState(false);
   const [clearError, setClearError] = React.useState("");
   const [showLanding, setShowLanding] = React.useState(true);
+  const [workspaceResetKey, setWorkspaceResetKey] = React.useState(0);
   const isBrandBoard = activeAgent.id === "brandboard";
   const isEscouade = activeAgent.id === "escouade";
   const isUply = activeAgent.id === "uply";
   const isUsage = activeAgent.id === "usage";
+  const canClearActiveAgent = activeAgent.id !== "usage";
   const isPending = pendingAgentId === activeAgent.id;
   const isComposerDisabled = isConversationLoading || !ghlSession.data?.sessionToken;
 
@@ -98,6 +103,23 @@ export function App() {
       nextAgentId: unlockedStep.id,
       nextAgentName: unlockedStep.name,
     };
+  }
+
+  function showCompletionNoticeFor(agentId, previousStatus, nextStatus) {
+    const notice = getAgentCompletionNotice(agentId, previousStatus, nextStatus);
+    if (!notice) return;
+
+    setCompletionNotice({
+      ...notice,
+      id: `${agentId}-${Date.now()}`,
+    });
+  }
+
+  function handleWorkspaceWorkflowStatus(nextWorkflowStatus, moveToCurrent = true, showNotice = true) {
+    if (showNotice) {
+      showCompletionNoticeFor(activeAgent.id, workflowStatus, nextWorkflowStatus);
+    }
+    applyWorkflowStatus(nextWorkflowStatus, moveToCurrent);
   }
 
   React.useEffect(() => {
@@ -160,13 +182,7 @@ export function App() {
           },
         ],
       }));
-      const notice = getAgentCompletionNotice(agent.id, workflowStatus, nextWorkflowStatus);
-      if (notice) {
-        setCompletionNotice({
-          ...notice,
-          id: `${agent.id}-${Date.now()}`,
-        });
-      }
+      showCompletionNoticeFor(agent.id, workflowStatus, nextWorkflowStatus);
       applyWorkflowStatus(nextWorkflowStatus, false);
     } catch (requestError) {
       const description =
@@ -206,7 +222,7 @@ export function App() {
   }
 
   async function handleClearAll() {
-    if (!ghlSession.data?.sessionToken || isClearingOutputs) return;
+    if (!ghlSession.data?.sessionToken || isClearingOutputs || isClearingAgentOutput) return;
 
     setIsClearingOutputs(true);
     setClearError("");
@@ -224,6 +240,30 @@ export function App() {
       setError(clearError.message || "Unable to clear account outputs.");
     } finally {
       setIsClearingOutputs(false);
+    }
+  }
+
+  async function handleClearActiveAgent() {
+    if (!ghlSession.data?.sessionToken || isClearingAgentOutput || !canClearActiveAgent) return;
+
+    const agentId = activeAgent.id;
+    setIsClearingAgentOutput(true);
+    setClearError("");
+    setError("");
+    try {
+      const result = await clearAgentOutput({
+        appSessionToken: ghlSession.data.sessionToken,
+        agentId,
+      });
+      resetAgentConversation(agentId, result.workflowStatus);
+      setWorkspaceResetKey((current) => current + 1);
+      setCompletionNotice(null);
+      setShowClearAgentConfirm(false);
+    } catch (clearError) {
+      setClearError(clearError.message || `Unable to clear ${activeAgent.name}.`);
+      setError(clearError.message || `Unable to clear ${activeAgent.name}.`);
+    } finally {
+      setIsClearingAgentOutput(false);
     }
   }
 
@@ -315,10 +355,24 @@ export function App() {
                 <span className="dev-unlock-label">Unlock all</span>
               </label>
             )}
+            {canClearActiveAgent && (
+              <button
+                className="clear-agent-button"
+                type="button"
+                disabled={!ghlSession.data?.sessionToken || isClearingOutputs || isClearingAgentOutput}
+                onClick={() => {
+                  setClearError("");
+                  setShowClearAgentConfirm(true);
+                }}
+              >
+                <Trash2 size={15} />
+                Clear this layer
+              </button>
+            )}
             <button
               className="clear-all-button"
               type="button"
-              disabled={!ghlSession.data?.sessionToken || isClearingOutputs}
+              disabled={!ghlSession.data?.sessionToken || isClearingOutputs || isClearingAgentOutput}
               onClick={() => {
                 setClearError("");
                 setShowClearConfirm(true);
@@ -334,13 +388,15 @@ export function App() {
           <div className={["main-column", isUsage ? "is-usage-column" : ""].filter(Boolean).join(" ")}>
             {isBrandBoard ? (
               <BrandBoardWorkspace
+                key={`brandboard-${workspaceResetKey}`}
                 appSessionToken={ghlSession.data?.sessionToken}
-                onWorkflowStatus={applyWorkflowStatus}
+                onWorkflowStatus={handleWorkspaceWorkflowStatus}
               />
             ) : isEscouade ? (
               <EscouadeWorkspace
+                key={`escouade-${workspaceResetKey}`}
                 appSessionToken={ghlSession.data?.sessionToken}
-                onWorkflowStatus={applyWorkflowStatus}
+                onWorkflowStatus={handleWorkspaceWorkflowStatus}
               />
             ) : isUply ? (
               <UplyWorkspace appSessionToken={ghlSession.data?.sessionToken} />
@@ -440,6 +496,57 @@ export function App() {
                 disabled={isClearingOutputs}
               >
                 {isClearingOutputs ? "Clearing..." : "Yes, clear all"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {showClearAgentConfirm && (
+        <div className="modal-backdrop" role="presentation">
+          <section className="confirm-modal confirm-modal-agent" role="dialog" aria-modal="true" aria-labelledby="clear-agent-title">
+            <button
+              className="confirm-modal-close"
+              type="button"
+              aria-label={`Cancel clearing ${activeAgent.name}`}
+              onClick={() => {
+                setClearError("");
+                setShowClearAgentConfirm(false);
+              }}
+              disabled={isClearingAgentOutput}
+            >
+              <X size={16} />
+            </button>
+            <div className="confirm-modal-icon" aria-hidden="true">
+              <Trash2 size={21} />
+            </div>
+            <div className="confirm-modal-copy">
+              <h2 id="clear-agent-title">Clear {activeAgent.name} output?</h2>
+              <p>
+                This removes saved data for {activeAgent.name} only. Other agent outputs stay in the account,
+                but the workflow will recalculate based on what remains.
+              </p>
+            </div>
+            {clearError && <div className="confirm-modal-error" role="alert">{clearError}</div>}
+            <div className="confirm-modal-actions">
+              <button
+                className="ghost-confirm-button"
+                type="button"
+                onClick={() => {
+                  setClearError("");
+                  setShowClearAgentConfirm(false);
+                }}
+                disabled={isClearingAgentOutput}
+              >
+                Cancel
+              </button>
+              <button
+                className="danger-confirm-button"
+                type="button"
+                onClick={handleClearActiveAgent}
+                disabled={isClearingAgentOutput}
+              >
+                {isClearingAgentOutput ? "Clearing..." : "Yes, clear this layer"}
               </button>
             </div>
           </section>

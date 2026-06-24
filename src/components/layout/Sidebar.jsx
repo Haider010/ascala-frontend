@@ -38,6 +38,7 @@ export function Sidebar({ activeAgent, workflowStatus, showLogout = true, onOpen
         {steps.map((item, index) => {
           const Icon = ICONS[item.id] || Sparkles;
           const orb = AGENT_ORBS[item.id];
+          const workspace = WORKSPACES[item.id];
           const isWorkspace = item.id in WORKSPACES;
           const isActive = isWorkspace && item.id === activeAgent.id;
           const isCompleted = item.completed || item.status === "completed";
@@ -75,6 +76,17 @@ export function Sidebar({ activeAgent, workflowStatus, showLogout = true, onOpen
               </span>
               <span className="nav-state" title={stateLabel}>
                 <StatusIcon size={15} />
+              </span>
+              <span className="nav-agent-popover" aria-hidden="true">
+                <span className="nav-popover-orb">
+                  {orb ? <img src={orb} alt="" /> : <Icon size={24} />}
+                </span>
+                <span className="nav-popover-kicker">{stateLabel} layer</span>
+                <strong>{item.name}</strong>
+                <small>{item.role}</small>
+                <span className="nav-popover-copy">
+                  {workspace?.specialty || workspace?.prompt || "Part of the Ascala workflow."}
+                </span>
               </span>
             </button>
           );

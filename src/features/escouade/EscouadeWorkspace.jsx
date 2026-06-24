@@ -124,6 +124,44 @@ function uniqueOptions(options, value) {
   return options.map(String).includes(stringValue) ? options : [value, ...options];
 }
 
+function memberTypeLabel(value) {
+  return MEMBER_TYPES.find(([memberType]) => memberType === value)?.[1] || String(value || "Format").replaceAll("_", " ");
+}
+
+function briefTitle(item, index = 0) {
+  return item?.title || item?.brief?.batch_name || item?.brief?.source_label || `Production Brief ${index + 1}`;
+}
+
+function menuFromBriefPayload(payload) {
+  const menu = Array.isArray(payload?.menu)
+    ? payload.menu.filter(Boolean).map((item, index) => ({
+        ...item,
+        id: String(item.id || `brief_${String(index + 1).padStart(3, "0")}`),
+      }))
+    : [];
+  if (menu.length) return menu;
+
+  if (!payload?.brief) return [];
+
+  return [
+    {
+      id: "brief_001",
+      title: payload.brief.batch_name || payload.brief.source_label || "Sacha production brief",
+      type: "Production Opportunity",
+      primary_member_type: payload.brief.member_type,
+      source_type: payload.brief.source_type,
+      source_label: payload.brief.source_label,
+      objective: payload.brief.filters?.objective,
+      primary_platform: payload.brief.filters?.primary_platform,
+      suggested_quantity: payload.brief.filters?.quantity,
+      cta_direction: payload.brief.filters?.cta_preference,
+      language: payload.brief.filters?.language,
+      production_notes: payload.brief.message || payload.brief.filters?.special_instructions,
+      brief: payload.brief,
+    },
+  ];
+}
+
 function normalizeText(value) {
   return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
@@ -186,6 +224,8 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
   const [error, setError] = React.useState("");
   const [pendingAction, setPendingAction] = React.useState("");
   const [productionBrief, setProductionBrief] = React.useState(null);
+  const [productionBriefMenu, setProductionBriefMenu] = React.useState([]);
+  const [selectedBriefId, setSelectedBriefId] = React.useState("");
   const [isBriefLoading, setIsBriefLoading] = React.useState(false);
 
   const dashboard = batch?.dashboard || {};
@@ -194,7 +234,12 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
   const approvedCount = counts.approved || 0;
   const activeItems = batch?.items?.filter((item) => item.status !== "exported") || [];
   const approvedItems = batch?.items?.filter((item) => item.status === "approved") || [];
+  const activeItemIds = activeItems.map((item) => item.id);
+  const selectableCount = activeItemIds.length;
+  const allActiveSelected = selectableCount > 0 && activeItemIds.every((id) => selectedIds.includes(id));
   const formatFilters = formatFiltersByMember[memberType] || defaultFormatFilters(memberType);
+  const selectedBriefItem =
+    productionBriefMenu.find((item) => String(item.id) === String(selectedBriefId)) || productionBriefMenu[0] || null;
 
   function applyProductionBrief(brief, { announce = true } = {}) {
     if (!brief) return;
@@ -239,6 +284,26 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
     }
   }
 
+  function applyProductionMenuItem(item, { announce = true } = {}) {
+    const brief = item?.brief || productionBrief?.brief;
+    if (!brief) return;
+
+    if (item?.id) {
+      setSelectedBriefId(String(item.id));
+    }
+    applyProductionBrief(brief, { announce: false });
+
+    if (announce) {
+      setStatus(`Applied Sacha brief: ${briefTitle(item)}.`);
+    }
+  }
+
+  function selectProductionMenuItem(nextId) {
+    const nextItem = productionBriefMenu.find((item) => String(item.id) === String(nextId));
+    if (!nextItem) return;
+    applyProductionMenuItem(nextItem);
+  }
+
   React.useEffect(() => {
     if (!appSessionToken || hasAppliedBriefRef.current) return;
 
@@ -247,10 +312,19 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
     getEscouadeProductionBrief({ appSessionToken })
       .then((payload) => {
         if (!isMounted) return;
-        if (payload?.brief) {
+        const nextMenu = menuFromBriefPayload(payload);
+        if (payload?.brief || nextMenu.length) {
           setProductionBrief(payload);
-          applyProductionBrief(payload.brief, { announce: false });
-          setStatus("Sacha production brief loaded into Escouade.");
+          setProductionBriefMenu(nextMenu);
+          if (nextMenu.length) {
+            setSelectedBriefId(String(nextMenu[0].id));
+            applyProductionBrief(nextMenu[0].brief || payload.brief, { announce: false });
+            setStatus(
+              nextMenu.length > 1
+                ? "Sacha production menu loaded into Escouade."
+                : "Sacha production brief loaded into Escouade.",
+            );
+          }
         }
         hasAppliedBriefRef.current = true;
       })
@@ -316,6 +390,14 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
     setSelectedIds((current) =>
       current.includes(itemId) ? current.filter((id) => id !== itemId) : [...current, itemId],
     );
+  }
+
+  function selectAllActiveItems() {
+    setSelectedIds(activeItemIds);
+  }
+
+  function clearSelectedItems() {
+    setSelectedIds([]);
   }
 
   function setFormatValue(key, value) {
@@ -474,20 +556,50 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
           ))}
         </div>
 
-        {(productionBrief?.brief || isBriefLoading) && (
-          <div className="escouade-brief-banner">
-            <div>
-              <strong>{isBriefLoading ? "Checking Sacha brief..." : "Sacha brief loaded"}</strong>
-              <span>
-                {isBriefLoading
-                  ? "Looking for the latest production parameters from Sacha."
-                  : "Escouade fields were prefilled from the saved social strategy."}
-              </span>
+        {(isBriefLoading || productionBriefMenu.length > 0 || productionBrief?.brief) && (
+          <div className="escouade-brief-picker">
+            <div className="escouade-brief-picker-header">
+              <div>
+                <strong>Sacha production menu</strong>
+                <span>
+                  {isBriefLoading
+                    ? "Checking the saved strategy for production opportunities."
+                    : `${productionBriefMenu.length || 1} saved ${productionBriefMenu.length === 1 ? "brief" : "briefs"} available.`}
+                </span>
+              </div>
+              {selectedBriefItem && (
+                <button type="button" onClick={() => applyProductionMenuItem(selectedBriefItem)}>
+                  Reapply
+                </button>
+              )}
             </div>
-            {productionBrief?.brief && (
-              <button type="button" onClick={() => applyProductionBrief(productionBrief.brief)}>
-                Reapply
-              </button>
+
+            {productionBriefMenu.length > 1 && (
+              <select value={selectedBriefId} onChange={(event) => selectProductionMenuItem(event.target.value)}>
+                {productionBriefMenu.map((item, index) => (
+                  <option key={item.id || index} value={String(item.id)}>
+                    {briefTitle(item, index)}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {selectedBriefItem && (
+              <div className="escouade-brief-summary">
+                <div>
+                  <span>{selectedBriefItem.type || "Production Opportunity"}</span>
+                  <h3>{briefTitle(selectedBriefItem)}</h3>
+                </div>
+                <div className="escouade-brief-meta">
+                  <span>{memberTypeLabel(selectedBriefItem.primary_member_type || selectedBriefItem.brief?.member_type)}</span>
+                  {selectedBriefItem.primary_platform && <span>{selectedBriefItem.primary_platform}</span>}
+                  {selectedBriefItem.objective && <span>{selectedBriefItem.objective}</span>}
+                  {selectedBriefItem.suggested_quantity && <span>{selectedBriefItem.suggested_quantity} posts</span>}
+                </div>
+                {(selectedBriefItem.angle || selectedBriefItem.production_notes) && (
+                  <p>{selectedBriefItem.angle || selectedBriefItem.production_notes}</p>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -621,6 +733,17 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
             </div>
 
             <div className="escouade-items">
+              <div className="escouade-selection-row">
+                <span>{selectedCount ? `${selectedCount} selected` : "No items selected"}</span>
+                <div>
+                  <button type="button" disabled={!selectableCount || allActiveSelected || Boolean(pendingAction)} onClick={selectAllActiveItems}>
+                    Select all
+                  </button>
+                  <button type="button" disabled={!selectedCount || Boolean(pendingAction)} onClick={clearSelectedItems}>
+                    Clear selection
+                  </button>
+                </div>
+              </div>
               <div className="escouade-section-label">Active items</div>
               {activeItems.map((item) => (
                 <article className={`escouade-item is-${item.status}`} key={item.id}>
@@ -657,9 +780,14 @@ export function EscouadeWorkspace({ appSessionToken, onWorkflowStatus }) {
             </div>
           </div>
         ) : (
-          <div className="escouade-empty-state">
-            <strong>No batch generated yet</strong>
-            <span>Choose a member, set the production filters, and generate a draft batch.</span>
+          <div className={pendingAction === "generate" ? "escouade-empty-state is-generating" : "escouade-empty-state"}>
+            {pendingAction === "generate" && <Loader2 className="spin" size={24} />}
+            <strong>{pendingAction === "generate" ? "Generating your batch..." : "No batch generated yet"}</strong>
+            <span>
+              {pendingAction === "generate"
+                ? "Escouade is using the selected brief, filters, and saved strategy context to create draft items."
+                : "Choose a member, set the production filters, and generate a draft batch."}
+            </span>
           </div>
         )}
       </div>

@@ -267,6 +267,24 @@ export function useAgentConsole() {
     setPendingAgentId(null);
   }
 
+  function resetAgentConversation(agentId, nextWorkflowStatus = workflowStatus) {
+    setState((current) => {
+      const fresh = createInitialState();
+      return {
+        ...current,
+        activeAgentId: getSelectableAgentId(nextWorkflowStatus || workflowStatus, current.activeAgentId),
+        conversations: {
+          ...current.conversations,
+          [agentId]: fresh.conversations[agentId] || EMPTY_CONVERSATION,
+        },
+      };
+    });
+    setWorkflowStatus(nextWorkflowStatus || createDefaultWorkflowStatus());
+    setDraft("");
+    setError("");
+    setPendingAgentId(null);
+  }
+
   function setDevUnlockAll(nextValue) {
     if (!isLocalDev) return;
 
@@ -340,6 +358,7 @@ export function useAgentConsole() {
     isConversationLoading,
     pendingAgentId,
     resetConsole,
+    resetAgentConversation,
     setActiveAgent,
     setDevUnlockAll,
     setDraft,
