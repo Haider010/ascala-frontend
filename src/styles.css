@@ -3493,6 +3493,19 @@ textarea {
   grid-row: 2;
 }
 
+.escouade-output-panel.is-sidebars-collapsed.is-no-batch {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.escouade-output-panel.is-sidebars-collapsed.is-no-batch .escouade-chat-panel {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.escouade-output-panel.is-sidebars-collapsed.is-no-batch .escouade-empty-state {
+  display: none;
+}
+
 .escouade-console.is-setup-collapsed .escouade-output-panel {
   transform: translateX(-1px);
 }

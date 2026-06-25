@@ -1877,6 +1877,7 @@ export function EscouadeWorkspace({
         "escouade-output-panel",
         "is-panel-both",
         areSidebarsCollapsed ? "is-sidebars-collapsed" : "",
+        !batch ? "is-no-batch" : "",
       ].filter(Boolean).join(" ")}>
         {error && (
           <div className="escouade-status is-error">
