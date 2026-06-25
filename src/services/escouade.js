@@ -3,6 +3,28 @@ import { getResponseText } from "../utils/format";
 import { AGENT_REQUEST_TIMEOUT_MS } from "../config/runtime";
 
 const ESCOUADE_REQUEST_TIMEOUT_MS = AGENT_REQUEST_TIMEOUT_MS;
+const escouadeWorkspaceCacheBySession = new Map();
+
+export function getEscouadeWorkspaceCache(appSessionToken) {
+  if (!appSessionToken) return null;
+  return escouadeWorkspaceCacheBySession.get(appSessionToken) || null;
+}
+
+export function setEscouadeWorkspaceCache(appSessionToken, value) {
+  if (!appSessionToken) return;
+  escouadeWorkspaceCacheBySession.set(appSessionToken, {
+    ...value,
+    cachedAt: Date.now(),
+  });
+}
+
+export function clearEscouadeWorkspaceCache(appSessionToken) {
+  if (appSessionToken) {
+    escouadeWorkspaceCacheBySession.delete(appSessionToken);
+    return;
+  }
+  escouadeWorkspaceCacheBySession.clear();
+}
 
 async function parseJson(response) {
   return response.json().catch(() => ({}));
@@ -56,7 +78,7 @@ function parseWorkflowStatusHeader(response) {
   }
 }
 
-export function generateEscouadeBatch({ appSessionToken, memberType, batchName, sourceType, sourceLabel, filters, message }) {
+export function generateEscouadeBatch({ appSessionToken, memberType, batchName, sourceType, sourceLabel, filters, message, conversationHistory = [] }) {
   return requestEscouade("/escouade/batch/generate", {
     method: "POST",
     appSessionToken,
@@ -67,6 +89,7 @@ export function generateEscouadeBatch({ appSessionToken, memberType, batchName, 
       source_label: sourceLabel,
       filters,
       message,
+      conversation_history: conversationHistory,
     },
   });
 }
@@ -77,18 +100,67 @@ export function getEscouadeProductionBrief({ appSessionToken }) {
   });
 }
 
-export function commandEscouadeBatch({ appSessionToken, batchId, message }) {
+export function getLatestEscouadeBatch({ appSessionToken }) {
+  return requestEscouade("/escouade/batch/latest", {
+    appSessionToken,
+  });
+}
+
+export function listEscouadeBatches({ appSessionToken, limit = 30 }) {
+  return requestEscouade(`/escouade/batch/history?limit=${encodeURIComponent(limit)}`, {
+    appSessionToken,
+  });
+}
+
+export function getEscouadeBatch({ appSessionToken, batchId }) {
+  return requestEscouade(`/escouade/batch/${encodeURIComponent(batchId)}`, {
+    appSessionToken,
+  });
+}
+
+export function getEscouadeChat({ appSessionToken }) {
+  return requestEscouade("/escouade/chat", {
+    appSessionToken,
+  });
+}
+
+export function saveEscouadeChatMessage({ appSessionToken, role, content, metadata = {} }) {
+  return requestEscouade("/escouade/chat/message", {
+    method: "POST",
+    appSessionToken,
+    body: {
+      role,
+      content,
+      metadata,
+    },
+  });
+}
+
+export function parseEscouadeSetupInstruction({ appSessionToken, instruction, currentSetup, conversationHistory = [] }) {
+  return requestEscouade("/escouade/setup/parse", {
+    method: "POST",
+    appSessionToken,
+    body: {
+      instruction,
+      current_setup: currentSetup,
+      conversation_history: conversationHistory,
+    },
+  });
+}
+
+export function commandEscouadeBatch({ appSessionToken, batchId, message, conversationHistory = [] }) {
   return requestEscouade("/escouade/batch/command", {
     method: "POST",
     appSessionToken,
     body: {
       batch_id: batchId,
       message,
+      conversation_history: conversationHistory,
     },
   });
 }
 
-export function reviseEscouadeItems({ appSessionToken, batchId, itemIds, instruction }) {
+export function reviseEscouadeItems({ appSessionToken, batchId, itemIds, instruction, conversationHistory = [] }) {
   return requestEscouade("/escouade/batch/revise", {
     method: "POST",
     appSessionToken,
@@ -96,6 +168,7 @@ export function reviseEscouadeItems({ appSessionToken, batchId, itemIds, instruc
       batch_id: batchId,
       item_ids: itemIds,
       instruction,
+      conversation_history: conversationHistory,
     },
   });
 }

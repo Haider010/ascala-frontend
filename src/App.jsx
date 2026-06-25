@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, CircleAlert, Trash2, X } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, Plus, Trash2, X } from "lucide-react";
 import { clearAccountOutputs, clearAgentOutput, sendToAgent } from "./services/agents";
 import { useAgentConsole } from "./hooks/useAgentConsole";
 import { Sidebar } from "./components/layout/Sidebar";
@@ -7,6 +7,7 @@ import { MessageBubble } from "./components/chat/MessageBubble";
 import { Composer } from "./components/chat/Composer";
 import { BrandBoardWorkspace } from "./features/brandboard/BrandBoardWorkspace";
 import { EscouadeWorkspace } from "./features/escouade/EscouadeWorkspace";
+import { clearEscouadeWorkspaceCache } from "./services/escouade";
 import { GhlSessionScreen } from "./features/ghl/GhlSessionScreen";
 import { LandingPage } from "./features/landing/LandingPage";
 import { LoginScreen } from "./features/auth/LoginScreen";
@@ -45,16 +46,18 @@ export function App() {
   const [completionNotice, setCompletionNotice] = React.useState(null);
   const [showClearConfirm, setShowClearConfirm] = React.useState(false);
   const [showClearAgentConfirm, setShowClearAgentConfirm] = React.useState(false);
+  const [startEscouadeNewBatch, setStartEscouadeNewBatch] = React.useState(null);
   const [isClearingOutputs, setIsClearingOutputs] = React.useState(false);
   const [isClearingAgentOutput, setIsClearingAgentOutput] = React.useState(false);
   const [clearError, setClearError] = React.useState("");
   const [showLanding, setShowLanding] = React.useState(true);
   const [workspaceResetKey, setWorkspaceResetKey] = React.useState(0);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
   const isBrandBoard = activeAgent.id === "brandboard";
   const isEscouade = activeAgent.id === "escouade";
   const isUply = activeAgent.id === "uply";
   const isUsage = activeAgent.id === "usage";
-  const canClearActiveAgent = activeAgent.id !== "usage";
+  const canClearActiveAgent = isLocalDev && activeAgent.id !== "usage";
   const isPending = pendingAgentId === activeAgent.id;
   const isComposerDisabled = isConversationLoading || !ghlSession.data?.sessionToken;
 
@@ -231,6 +234,7 @@ export function App() {
       const result = await clearAccountOutputs({
         appSessionToken: ghlSession.data.sessionToken,
       });
+      clearEscouadeWorkspaceCache(ghlSession.data.sessionToken);
       resetConsole(result.workflowStatus);
       setShowLanding(true);
       setCompletionNotice(null);
@@ -255,6 +259,9 @@ export function App() {
         appSessionToken: ghlSession.data.sessionToken,
         agentId,
       });
+      if (agentId === "escouade") {
+        clearEscouadeWorkspaceCache(ghlSession.data.sessionToken);
+      }
       resetAgentConversation(agentId, result.workflowStatus);
       setWorkspaceResetKey((current) => current + 1);
       setCompletionNotice(null);
@@ -294,7 +301,25 @@ export function App() {
   }
 
   return (
-    <main className="ascala-workspace" style={{ "--agent-accent": activeAgent.accent }}>
+    <main
+      className={[
+        "ascala-workspace",
+        isSidebarCollapsed ? "is-sidebar-collapsed" : "",
+        isEscouade ? "is-escouade-active" : "",
+      ].filter(Boolean).join(" ")}
+      style={{ "--agent-accent": activeAgent.accent }}
+    >
+      {!isEscouade && (
+        <button
+          className="app-sidebar-toggle"
+          type="button"
+          aria-label={isSidebarCollapsed ? "Open main sidebar" : "Collapse main sidebar"}
+          aria-expanded={!isSidebarCollapsed}
+          onClick={() => setIsSidebarCollapsed((current) => !current)}
+        >
+          {isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+        </button>
+      )}
       <Sidebar
         activeAgent={activeAgent}
         workflowStatus={effectiveWorkflowStatus}
@@ -355,6 +380,17 @@ export function App() {
                 <span className="dev-unlock-label">Unlock all</span>
               </label>
             )}
+            {isEscouade && (
+              <button
+                className="new-batch-topbar-button"
+                type="button"
+                disabled={!ghlSession.data?.sessionToken || isClearingOutputs || isClearingAgentOutput || !startEscouadeNewBatch}
+                onClick={() => startEscouadeNewBatch?.()}
+              >
+                <Plus size={15} />
+                New Batch
+              </button>
+            )}
             {canClearActiveAgent && (
               <button
                 className="clear-agent-button"
@@ -397,6 +433,9 @@ export function App() {
                 key={`escouade-${workspaceResetKey}`}
                 appSessionToken={ghlSession.data?.sessionToken}
                 onWorkflowStatus={handleWorkspaceWorkflowStatus}
+                isMainSidebarCollapsed={isSidebarCollapsed}
+                onMainSidebarCollapsedChange={setIsSidebarCollapsed}
+                onNewBatchReady={setStartEscouadeNewBatch}
               />
             ) : isUply ? (
               <UplyWorkspace appSessionToken={ghlSession.data?.sessionToken} />
